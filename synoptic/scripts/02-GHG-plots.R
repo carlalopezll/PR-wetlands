@@ -1,4 +1,6 @@
+# Plotting dissolved GHG concentrations in PR coastal wetlands
 
+# Load libraries
 library(ggplot2)
 library(lubridate)
 library(dplyr)
