@@ -1,0 +1,347 @@
+########################################
+# Equations to used to estimate CO2 and CH4 from headspace sampling 
+# Coded/checked/updated by ERH from UQAM/Krycklan files
+# Code updated for Delmarva Project by ERH
+# *** still need to: double-check uatm to umol/m3 conversions
+# *** still need to: fix CH4 calculations
+# Last update: 20211109 by CLL
+########################################
+
+# Load libraries
+
+library(dplyr) # data manipulation
+library(tidyr) # reshaping data functions
+library(readr) # reading and writing csvs
+library(udunits2) # unit conversions
+library(lubridate)
+library(scales)
+library(methods)
+library(ggplot2)
+
+############# A. LOAD FUNCTIONS #############
+
+##### [1] SOLUBILITY CONSTANT FOR CO2 #####
+# as in Weiss 1974 for units of mol L-1 atm-1 (also in Demarty et al 2011; many others)
+KH.CO2 <- function(tempC){
+  tempK <- tempC + 273.15
+  KH.CO2 <- exp( -58.0931 + (90.5069*(100/tempK)) +22.2940*log((tempK/100), base=exp(1)) )
+  KH.CO2
+}
+
+##### [2] SOLUBILITY CONSTANT FOR CH4 #####
+# same constants as in Demarty et al 2011 Biogeosciences, which references Lide 2007 Handbook of Chemistry and Physics
+# units are mol L-1 atm-1
+KH.CH4 <- function(tempC){
+  tempK <- tempC + 273.15
+  KH.CH4  <- exp(-115.6477 + (155.5756/((tempK)/100))+65.2553* log( ((tempK)/100), base=exp(1) ) -6.1698*((tempK)/100))*1000/18.0153
+  KH.CH4
+}
+
+# Trying a fix after looking at Demarty
+# Demarty reported the correction factor (1000/18.0153) with units mole/L/atm
+# Needed to convert that to mol/L/uatm
+# KH.CH4 <- function(tempC){
+#   tempK <- tempC + 273.15
+#   KH.CH4  <- (exp(-115.6477 + (155.5756/((tempK)/100))+65.2553* log( ((tempK)/100), base=exp(1) ) -6.1698*((tempK)/100)))*(1000/18.0153*1000000)
+#   KH.CH4
+# }
+
+# # From Kelly Aho script
+# 
+# KH.CH4 <- function(tempC){
+#   tempK <- tempC + 273.15
+#   KH.CH4  <- 0.000014*exp(1900*(1/(tempK)-1/298.15))*101325/1000
+#   KH.CH4
+# }
+
+##### [3] FUNCTION TO ESTIMATE STREAM pCO2 from headspace sample data (what the GC gives you) ####
+# temp inputs are in C
+# pressure input is kPa IN LAB (used for molar volume at analysis)
+# gasV and waterV units must be the same (to make equilibration headspace ratio)
+# pCO2 of sample = what the GC or picarro gives you # uatm or ppmv
+# pCO2 of hs = what you add to create headspace # uatm or ppmv
+# 101.325 kPa = 1 atm
+# 0.082057 = R = universal gas constant in L*atm / mol*K
+StmCO2fromSamp <- function(tempLab.C, tempSite.C, kPa, gasV, waterV, pCO2.samp, pCO2.hs){
+  tempLab.K <- tempLab.C + 273.15
+  molV <- 0.082057*(tempLab.K)*(101.325/kPa) # L mol-1
+  hsRatio <- gasV/waterV
+  KH.Lab <- KH.CO2(tempLab.C) # mol L-1 atm-1
+  KH.Site <- KH.CO2(tempSite.C) # mol L-1 atm-1
+  StmCO2 <- (pCO2.samp*KH.Lab + (hsRatio*(pCO2.samp-pCO2.hs) / molV )  ) /KH.Site
+  StmCO2
+}
+
+##### [4] FUNCTION TO CONVERT pCO2 from uatm to umol/m3 ####
+# 1 m3 = 1000 L; convert umol/m3 to umol/L = Fw/1000
+FwCO2 <- function(tempC, CO2w.uatm){
+  # Parameters and units:
+  # CO2w.uatm = uatm
+  # assume uatm = ppmv
+  # R = L atm / K mol
+  R <- 0.08205601 # from Weiss 1974
+  # Tk = K
+  tempK <- tempC + 273.15
+  # convert CO2, water (uatm) to umol/m3 
+  CO2wM <- CO2w.uatm*(1/R)*(1/(10^-3))*(1/tempK)
+  CO2wM
+}
+
+##### [5] FUNCTION TO ESTIMATE STREAM pCH4 from headspace sample data (what the Picarro or GC gives you) ####
+# temp inputs are in C
+# pressure input is kPa IN LAB (used for molar volume at analysis)
+# gasV and waterV units must be the same (to make equilibration headspace ratio)
+# pCH4 of sample = what the GC or picarro gives you # uatm or ppmv
+# pCH4 of hs = what you add to create headspace # uatm or ppmv
+# pkH = solubility at sampling temp = M atm-1
+# 101.325 kPa = 1 atm
+# 0.082057 = R = universal gas constant in L*atm / mol*K
+StmCH4fromSamp <- function(tempLab.C, tempSite.C, kPa, gasV, waterV, pCH4.samp, pCH4.hs){
+  tempLab.K <- tempLab.C + 273.15
+  molV <- 0.082057*(tempLab.K)*(101.325/kPa) # L mol-1 calculated for lab conditions
+  hsRatio <- gasV/waterV
+  KH.Lab <- KH.CH4(tempLab.C) # mol L-1 atm-1
+  KH.Site <- KH.CH4(tempSite.C) # mol L-1 atm-1
+  StmCH4 <- (pCH4.samp*KH.Lab + (hsRatio*(pCH4.samp-pCH4.hs) / molV )  ) /KH.Site
+  StmCH4
+}
+
+
+##### [6] FUNCTION TO CONVERT pCH4 from uatm to umol/m3 ####
+# **** Need to check updated code specific to CH4 (not CO2) ****
+# 1 m3 = 1000 L; convert umol/m3 to umol/L = Fw/1000
+FwCH4 <- function(tempC, CH4w.uatm){
+  # Parameters and units:
+  # CH4w.uatm = uatm
+  # assume uatm = ppmv
+  # R = L atm / K mol
+  R <- 0.08205601 # from Weiss 1974
+  # Tk = K
+  tempK <- tempC + 273.15
+  # convert CO2, water (uatm) to umol/m3 
+  CH4wM <- CH4w.uatm*(1/R)*(1/(10^-3))*(1/tempK)
+  CH4wM
+}
+
+
+
+########################################
+
+############# B. LOAD/MERGE DATA FILES #############
+
+# LOAD files from (1) GC output, (2) lab notes with headspace volumes, and (3) any different site IDs
+
+# Set working space
+setwd("C:/Users/Carla L?pez Lloreda/Dropbox/Grad school/Research/Humedales Puerto Rico")
+
+# Read GCHeadspace with GC data
+
+GHG <- read.csv("Data/PR wetland sampling data.xlsx")
+
+# Add 20ml volume to water and air columns
+GHG$AirV_mL <- 20
+GHG$WaterV_mL <- 20
+
+# Filter air samples 
+
+Air <- GHG %>%
+  dplyr::filter(Rep == "Air")
+
+# Looking at 3 air reps and removing any outlier
+
+ggplot(Air, aes(x = Air_Location, y = CH4_ppm)) +
+  geom_boxplot() +
+  geom_jitter(width = 0)
+
+ggplot(Air, aes(x = Air_Location, y = CO2_ppm)) +
+  geom_boxplot() +
+  geom_jitter(width = 0)
+
+# Summarize air data for different sites
+# add column to data file with hsCO2_ppm & hsCH4_ppm (e.g., LabAir, JL Air)
+# Air_Location is the ID that will match up with air-water
+
+# Filter air samples, group by location and calculate median, max and min
+
+Air_summary <- Air %>%
+  dplyr::group_by(Air_Location) %>%
+  dplyr::summarize(AirCO2_min_ppm = min(CO2_ppm, na.rm = TRUE), AirCO2_med_ppm = median(CO2_ppm, na.rm = TRUE), 
+   AirCO2_max_ppm = max(CO2_ppm, na.rm = TRUE), AirCH4_min_ppm = min(CH4_ppm, na.rm = TRUE),
+   AirCH4_med_ppm = median(CH4_ppm, na.rm = TRUE), AirCH4_max_ppm = max(CH4_ppm, na.rm = TRUE))
+
+# Join the 3 reps with their respective means
+
+
+# Save GHG median to a csv
+write.csv(Air_summary, "PR wetlands_Air_summary.csv", row.names = FALSE)
+
+# Adding summary air columns to GHG
+GHG_new <- left_join(GHG, Air_summary, by = "Air_Location")
+
+########################################
+
+############# C. CONVERT GC DATA TO STREAM CO2/CH4 #############
+
+# Estimate stream CO2/CH4 from GC headspace (uatm) 
+# NOTE: lab temp and pressure are fixed for now, 20C and 102kPa
+
+# Use an average water temp for now
+
+GHG_new$WaterT_C <- 20
+
+# subset the data to exclude air samples
+samp <- GHG_new[ which(GHG_new$Rep!="Air"), ]
+
+# Check for sites w/o temp
+na_rows <- samp[!complete.cases(samp$WaterT_C), ]
+
+# StmCO2fromSamp <- function(tempLab.C, tempSite.C, kPa, gasV, waterV, pCO2.samp, pCO2.hs)
+# This is pCO2 (uatm)
+samp$wCO2_uatm_medhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$WaterT_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_med_ppm)
+samp$wCO2_uatm_minhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$WaterT_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_min_ppm)
+samp$wCO2_uatm_maxhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$WaterT_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_max_ppm)
+
+# StmCH4fromSamp <- function(tempLab.C, tempSite.C, kPa, gasV, waterV, pCH4.samp, pCH4.hs)
+# This is pCH4 (uatm)
+samp$wCH4_uatm_medhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$WaterT_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_med_ppm)
+samp$wCH4_uatm_minhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$WaterT_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_min_ppm)
+samp$wCH4_uatm_maxhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$WaterT_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_max_ppm)
+# VALUES ARE WAYYY TOO HIGH - need to revisit...done for now /E *****************************
+# I haven't been able to figure it out - CLL 12/2022
+# Using NEON equations for now...
+
+#### CONVERT pCO2 and pCH4 from uatm to umol/m3 ** check on these conversions, especially for CH4! ** ####
+# Need to finalize - CLL
+
+samp$wCO2_umolm3_med <- FwCO2(tempC = samp$WaterT_C, CO2w.uatm = samp$wCO2_uatm_medhs)
+samp$wCH4_umolm3_med <- FwCH4(tempC = samp$WaterT_C, CH4w.uatm = samp$wCH4_uatm_medhs) # this needs to be double-checked
+
+#### CONVERT umol/m3 to umol/L
+
+samp$wCO2_uM_med <- samp$wCO2_umolm3_med / 1000
+samp$wCH4_uM_med <- samp$wCH4_umolm3_med / 1000
+
+#### CONVERT umol/L to mg/L
+
+samp$wCO2_mgL_med <- (samp$wCO2_umolm3_med * 44.01)/1000
+samp$wCH4_mgL_med <- (samp$wCH4_umolm3_med * 16.4)/1000
+
+# Save updated dataframe, samp
+write.csv(samp, "PR wetlands_GHG.csv", row.names = FALSE)
+
+# Run it through the NEON script now
+
+inputFile <- samp
+
+inputFile$baro <- 102
+inputFile$headspaceTemp.C <- 20
+
+# rename columns
+inputFile <- inputFile %>%
+  rename(gasVolume = AirV_mL,
+         waterVolume = WaterV_mL,
+         waterTemp.C = WaterT_C,
+         CO2.GC = CO2_ppm,
+         CO2air.GC = AirCO2_med_ppm,
+         CH4.GC = CH4_ppm,
+         CH4air.GC = AirCH4_med_ppm)
+
+def.calc.sdg.conc <- function(
+    inputFile,
+    volGas = "gasVolume",
+    volH2O = "waterVolume",
+    baro = "baro",
+    waterTemp = "waterTemp.C",
+    headspaceTemp = "headspaceTemp.C",
+    eqCO2 = "CO2.GC",
+    sourceCO2 = "CO2air.GC",
+    eqCH4 = "CH4.GC",
+    sourceCH4 = "CH4air.GC",
+    eqN2O = "concentrationN2OGas",
+    sourceN2O = "concentrationN2OAir"
+) {
+  if(typeof(inputFile) == "character"){
+    inputFile <- read.csv(inputFile)
+  }
+  ##### Constants #####
+  cGas<-8.3144598 #universal gas constant (J K-1 mol-1)
+  cKelvin <- 273.15 #Conversion factor from Kelvin to Celsius
+  cPresConv <- 0.000001 # Constant to convert mixing ratio from umol/mol (ppmv) to mol/mol. Unit conversions from kPa to Pa, m^3 to L, cancel out.
+  cT0 <- 298.15#Henry's law constant T0
+  #Henry's law constants and temperature dependence from Sander (2015) DOI: 10.5194/acp-15-4399-2015
+  ckHCO2 <- 0.00033 #mol m-3 Pa, range: 0.00031 - 0.00045
+  ckHCH4 <- 0.000014 #mol m-3 Pa, range: 0.0000096 - 0.000092
+  ckHN2O <- 0.00024 #mol m-3 Pa, range: 0.00018 - 0.00025
+  cdHdTCO2 <- 2400 #K, range: 2300 - 2600
+  cdHdTCH4 <- 1900 #K, range: 1400-2400
+  cdHdTN2O <- 2700 #K, range: 2600 - 3600
+  ##### Populate mean global values for reference air where it isn't reported #####
+  inputFile[,sourceCO2] = ifelse(is.na(inputFile[,sourceCO2]),# if reported as NA
+                                 405, # use global mean https://www.esrl.noaa.gov/gmd/ccgg/trends/global.html
+                                 inputFile[,sourceCO2])
+  inputFile[,sourceCH4] = ifelse(is.na(inputFile[,sourceCH4]), # use global average if not measured
+                                 1.85, #https://www.esrl.noaa.gov/gmd/ccgg/trends_ch4/
+                                 inputFile[,sourceCH4])
+  ##### Calculate dissolved gas concentration in original water sample #####
+  inputFile$dissolvedCO2 <- NA
+  inputFile$dissolvedCO2 <- inputFile[,baro] * cPresConv *
+    (inputFile[,volGas]*(inputFile[,eqCO2] - inputFile[,sourceCO2])/(cGas * (inputFile[,headspaceTemp] + cKelvin) * inputFile[,volH2O]) +
+       ckHCO2 * exp(cdHdTCO2*(1/(inputFile[,headspaceTemp] + cKelvin) - 1/cT0))* inputFile[,eqCO2])
+  inputFile$dissolvedCH4 <- NA
+  inputFile$dissolvedCH4 <- inputFile[,baro] * cPresConv *
+    (inputFile[,volGas]*(inputFile[,eqCH4] - inputFile[,sourceCH4])/(cGas * (inputFile[,headspaceTemp] + cKelvin) * inputFile[,volH2O]) +
+       ckHCH4 * exp(cdHdTCH4*(1/(inputFile[,headspaceTemp] + cKelvin) - 1/cT0))* inputFile[,eqCH4])
+  #Round to significant figures
+  inputFile$dissolvedCO2.molL <- signif(inputFile$dissolvedCO2, digits = 3)
+  inputFile$dissolvedCH4.molL <- signif(inputFile$dissolvedCH4, digits = 3)
+  return(inputFile)
+}
+
+# Get output
+gases <- def.calc.sdg.conc(inputFile)
+
+# dissolved units in their output are mol L-1
+
+# for umol
+#convert *1e06 mol to umol and *1000 l to m3
+
+gases$dCO2.umol <- gases$dissolvedCO2 * 1000000
+gases$dCH4.umol <- gases$dissolvedCH4 * 1000000
+
+#for mmol ***I usually start with this one
+#mmol *1000 mol to mmol *1000 l to m3
+# gases$dCO2.mmol <- gases$dissolvedCO2.molL * 1000000
+# gases$dCH4.mmol <- gases$dissolvedCH4.molL * 1000000
+
+# Compare Hotchkiss script to NEON script
+
+ggplot(gases, aes(x= dCH4.umol, y = wCH4_uM_med)) +
+  geom_point()
+
+
+# ggsave("2021-10/20210_CH4 comparison.jpg")
+
+ggplot(gases, aes(x= dCO2.umol, y = wCO2_uM_med)) +
+  geom_point()
+
+# ggsave("2021-10/202110_CO2 comparison.jpg")
+
+# mg/L
+# pvy20_neon$dCO2.mgl <- pvy20_neon$dissolvedCO2 * 44.01 * 1000
+# check if output makes sense
+
+# write new csv so you don't have to do this again
+
+write.csv(gases, "Data/PR wetlands_GHG_NEON.csv", row.names = FALSE)
+
+# Clean up and average the reps
+
+gases_clean <- gases %>%
+  filter(!Rep == "Air") %>%
+  group_by(Site_ID) %>%
+  summarise(Site = first(Site), Sample_Type = first(Sample_Type), Sample_Date = first(Sample_Date), 
+            CO2_uM = mean(dCO2.umol, na.rm = TRUE), CH4_uM = mean(dCH4.umol, na.rm = TRUE))
+
+# Save clean, averaged spreadsheet
+
+write.csv(gases_clean, "Data/PR wetlands_GHG_NEON_clean.csv", row.names = FALSE)
