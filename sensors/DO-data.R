@@ -4,11 +4,18 @@ library(plotly)
 
 setwd("C:/Users/Carla López Lloreda/Dropbox/Grad school/Research/Humedales Puerto Rico/Data/DO data")
 
+# Water level data
+
+wl_pa <- read_csv("sensors/water level/Palmas_Summer2024.csv")
+
+wl_pa$Timestamp_corrected <- as_datetime(wl_pa$timestamp)
+wl_to <- read_csv("sensors/water level/Tortuguero_Summer2024.csv")
+
 # DO data for PR
 
-do_pr <- read.csv("Data with datetime.csv")
-do_summer <- read_csv("Summer DO.csv")
-do_winter <- read_csv("Winter 2024 deployments/7450-695497 - Copy/Winter 2024 DO.csv")
+do_pr <- read.csv("sensors/DO data/Data with datetime.csv")
+do_summer <- read_csv("sensors/DO data/Summer DO.csv")
+do_winter <- read_csv("sensors/DO data/Winter 2024 deployments/7450-695497 - Copy/Winter 2024 DO.csv")
 
 do_winter <- filter(do_winter, Timestamp > "2023-12-27 15:00")
 
@@ -17,6 +24,39 @@ do_palmas <- read_csv("Summer 2024/Palmas/Palmas_summer2024.csv")
 do_tortuguero <- read_csv("Summer 2024/Tortuguero/Tortuguero_summer2024.csv")
 
 # Palmas
+
+
+ggplot(wl_pa, aes(x= num, y = cond_us_cm)) +
+  geom_point() +
+  xlab("") +
+  ylim(200, 1400)
+
+ggsave("Palmas cond timeseries.jpg")
+
+ggplot(wl_to, aes(x= num, y = cond_us_cm)) +
+  geom_point() +
+  xlab("") +
+  ylim(200,1400)
+
+ggsave("Tortuguero condtimeseries.jpg")
+
+
+
+ggplot(wl_pa, aes(x= num, y = temp_C)) +
+  geom_point() +
+  xlab("")
+
+ggsave("Palmas temp timeseries.jpg")
+
+ggplot(wl_to, aes(x= num, y = temp_C)) +
+  geom_point() +
+  xlab("")
+
+ggsave("Tortuguero temp timeseries.jpg")
+
+
+
+
 ggplotly(ggplot(do_palmas, aes(x = Timestamp, y = DO_mgL)) +
            geom_point() +
            theme(legend.position = "none") +
