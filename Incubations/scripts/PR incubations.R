@@ -30,12 +30,21 @@ PA <- filter(inc, site == "PA")
 TO <- filter(inc, site == "TO")
 
 ggplot(PA, aes(x=timepoint, y= CO2_ppm, fill = treatment, color = treatment, group = interaction(treatment, timepoint))) +
+  ggtitle("Palmas")
+
+ggsave("incubations/output/Palmas CO2_clean.jpg")
+
+ggplot(PA, aes(x=timepoint, y= CO2_ppm, fill = treatment, color = treatment, group = interaction(treatment, timepoint))) +
   geom_boxplot(alpha = 0.1)+
   geom_point(position = position_dodge(width = 0.75), alpha = 0.2) +
   ggtitle("Palmas")
 
 ggsave("Palmas_CO2.jpg")
 
+ggplot(PA, aes(x=timepoint, y= CH4_ppm, fill = treatment, color = treatment, group = interaction(treatment, timepoint))) +
+  ggtitle("Palmas")
+
+ggsave("incubations/output/Palmas CH4_clean.jpg")
 
 ggplot(PA, aes(x=timepoint, y= CH4_ppm, fill = treatment, color = treatment, group = interaction(treatment, timepoint))) +
   geom_boxplot(alpha = 0.1)+
@@ -46,11 +55,21 @@ ggsave("Palmas_CH4.jpg")
 
 
 ggplot(TO, aes(x=timepoint, y= CO2_ppm, fill = treatment, color = treatment, group = interaction(treatment, timepoint))) +
+  ggtitle("Tortuguero")
+
+ggsave("Tortuguero_CO2 clean.jpg")
+
+ggplot(TO, aes(x=timepoint, y= CO2_ppm, fill = treatment, color = treatment, group = interaction(treatment, timepoint))) +
   geom_boxplot(alpha = 0.1)+
   geom_point(position = position_dodge(width = 0.75), alpha = 0.2) +
   ggtitle("Tortuguero")
 
 ggsave("Tortuguero_CO2.jpg")
+
+ggplot(TO, aes(x=timepoint, y= CH4_ppm, fill = treatment, color = treatment, group = interaction(treatment, timepoint))) +
+  ggtitle("Tortuguero")
+
+ggsave("Tortuguero_CH4 clean.jpg")
 
 ggplot(TO, aes(x=timepoint, y= CH4_ppm, fill = treatment, color = treatment, group = interaction(treatment, timepoint))) +
   geom_boxplot(alpha = 0.1)+
@@ -60,12 +79,14 @@ ggplot(TO, aes(x=timepoint, y= CH4_ppm, fill = treatment, color = treatment, gro
 ggsave("Tortuguero_CH4.jpg")
 
 ggplot(inc_avg, aes(x= SpC_us_cm, y= CO2_mean, color = site, shape = timepoint)) +
-  geom_point(size = 5)
+  geom_point(size = 5) +
+  geom_line()
 
 ggsave("incubations/output/CO2 avg vs SpC.jpg")
 
 ggplot(inc_avg, aes(x= SpC_us_cm, y= CH4_mean, color = site, shape = timepoint)) +
   geom_point(size = 5) +
+  geom_line() +
   scale_y_log10()
 
 ggsave("incubations/output/CH4 avg vs SpC.jpg")
