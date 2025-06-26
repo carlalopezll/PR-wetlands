@@ -1,3 +1,9 @@
+*.csv
+*.xlsx
+*.jpg
+*.png
+*.hobo
+
 # History files
 .Rhistory
 .Rapp.history
