@@ -68,7 +68,7 @@ StmCO2fromSamp <- function(tempLab.C, tempSite.C, kPa, gasV, waterV, pCO2.samp, 
   hsRatio <- gasV/waterV
   KH.Lab <- KH.CO2(tempLab.C) # mol L-1 atm-1
   KH.Site <- KH.CO2(tempSite.C) # mol L-1 atm-1
-  StmCO2 <- (pCO2.samp*KH.Lab + (hsRatio*(pCO2.samp-pCO2.hs) / molV )  ) /KH.Site
+  StmCO2 <- (pCO2.samp*KH.Lab + (hsRatio*(pCO2.samp) / molV )  ) /KH.Site
   StmCO2
 }
 
@@ -102,7 +102,7 @@ StmCH4fromSamp <- function(tempLab.C, tempSite.C, kPa, gasV, waterV, pCH4.samp, 
   hsRatio <- gasV/waterV
   KH.Lab <- KH.CH4(tempLab.C) # mol L-1 atm-1
   KH.Site <- KH.CH4(tempSite.C) # mol L-1 atm-1
-  StmCH4 <- (pCH4.samp*KH.Lab + (hsRatio*(pCH4.samp-pCH4.hs) / molV )  ) /KH.Site
+  StmCH4 <- (pCH4.samp*KH.Lab + (hsRatio*(pCH4.samp) / molV )  ) /KH.Site
   StmCH4
 }
 
@@ -136,7 +136,7 @@ setwd("C:/Users/Carla L?pez Lloreda/Dropbox/Grad school/Research/Humedales Puert
 
 # Read GCHeadspace with GC data
 
-GHG <- read.csv("Data/PR wetland sampling data.xlsx")
+GHG <- readxl::read_excel("synoptic/GC data synoptic_corrected.xlsx")
 
 # Add 20ml volume to water and air columns
 GHG$AirV_mL <- 20
@@ -186,8 +186,10 @@ GHG_new <- left_join(GHG, Air_summary, by = "Air_Location")
 # NOTE: lab temp and pressure are fixed for now, 20C and 102kPa
 
 # Use an average water temp for now
-
+GHG_new <- GHG
 GHG_new$WaterT_C <- 20
+
+samp <- GHG_new
 
 # subset the data to exclude air samples
 samp <- GHG_new[ which(GHG_new$Rep!="Air"), ]
@@ -197,18 +199,11 @@ na_rows <- samp[!complete.cases(samp$WaterT_C), ]
 
 # StmCO2fromSamp <- function(tempLab.C, tempSite.C, kPa, gasV, waterV, pCO2.samp, pCO2.hs)
 # This is pCO2 (uatm)
-samp$wCO2_uatm_medhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$WaterT_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_med_ppm)
-samp$wCO2_uatm_minhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$WaterT_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_min_ppm)
-samp$wCO2_uatm_maxhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$WaterT_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_max_ppm)
+samp$wCO2_uatm_medhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$WaterT_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2)
 
 # StmCH4fromSamp <- function(tempLab.C, tempSite.C, kPa, gasV, waterV, pCH4.samp, pCH4.hs)
 # This is pCH4 (uatm)
-samp$wCH4_uatm_medhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$WaterT_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_med_ppm)
-samp$wCH4_uatm_minhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$WaterT_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_min_ppm)
-samp$wCH4_uatm_maxhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$WaterT_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_max_ppm)
-# VALUES ARE WAYYY TOO HIGH - need to revisit...done for now /E *****************************
-# I haven't been able to figure it out - CLL 12/2022
-# Using NEON equations for now...
+samp$wCH4_uatm_medhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$WaterT_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4)
 
 #### CONVERT pCO2 and pCH4 from uatm to umol/m3 ** check on these conversions, especially for CH4! ** ####
 # Need to finalize - CLL
@@ -227,7 +222,7 @@ samp$wCO2_mgL_med <- (samp$wCO2_umolm3_med * 44.01)/1000
 samp$wCH4_mgL_med <- (samp$wCH4_umolm3_med * 16.4)/1000
 
 # Save updated dataframe, samp
-write.csv(samp, "PR wetlands_GHG.csv", row.names = FALSE)
+write.csv(samp, "PR synoptic_GHG.csv", row.names = FALSE)
 
 # Run it through the NEON script now
 

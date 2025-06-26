@@ -10,10 +10,27 @@ library(emmeans)
 library(multcompView)
 library(multcomp)
 
-setwd("C:/Users/Carla López Lloreda/Dropbox/Grad school/Research/Humedales Puerto Rico")
+chem <- read_csv("synoptic/data/Solubles_PR synoptic.csv")
+
+chem$Date_corrected <- as.Date(chem$Date, format = '%m/%d/%Y')
+
+# Average reps
+
+chem <- chem %>%
+  group_by(Site, Date_corrected) %>%
+  mutate(NH4_ppb_mean = mean(`NH4-N_ppb`),
+         PO4_ppb_mean = mean(`PO4-P_ppb`))
+
+ggplot(chem, aes(x= Site, y = NH4_ppb_mean)) +
+  geom_boxplot() +
+  geom_point()
+
+ggplot(chem, aes(x= Site, y = PO4_ppb_mean)) +
+  geom_boxplot() +
+  geom_point()
 
 # Read in GHG data
-ghg_pr <- read_csv("Data/PR wetlands_GHG_NEON.csv")
+
 
 hydro <- read_csv("Data/GHG summary table w hydro.csv")
 
@@ -34,36 +51,71 @@ soilpw <- filter(soilpw, Depth == 1)
 ghg_pr <- filter(ghg_pr, !is.na(Rep))
 
 # Change to standard date format
-ghg_pr$Date_corrected <- as.Date(ghg_pr$Date, format = '%m/%d/%Y')
+ghg$Date_corrected <- as.Date(ghg$Date, format = '%m/%d/%Y')
 
 # Theme stuff 
 theme <- theme_bw() +
-  theme(text = element_text(size = 35))
+  theme(
+    text = element_text(size = 35),         # base text size
+    axis.title = element_text(size = 40),   # axis titles
+    axis.text = element_text(size = 30),    # axis tick labels
+    legend.text = element_text(size = 30),  # legend text
+    legend.title = element_text(size = 35), # legend title
+    strip.text = element_text(size = 35)    # facet strip text
+  )
 
 # Axis titles for subscripts in CH4 and CO2
 CO2_lab <- expression(paste("C","O"[2]^{}*" ("*mu,"M)"))
 CH4_lab <- expression(paste("C","H"[4]^{}*" ("*mu,"M)"))
 
-# Function to get season
-getSeason <- function(d) {
-  WS <- as.Date("2021-12-21") # Winter Solstice
-  SE <- as.Date("2021-3-19") # Spring Equinox
-  SS <- as.Date("2021-5-20") # Summer Solstice
-  FE <- as.Date("2021-9-22") # Fall Equinox
-  
-  ifelse (d >= WS | d < SE, "Winter",
-          ifelse (d >= SE & d < SS, "Spring",
-                  ifelse (d >= SS & d < FE, "Summer", "Fall")))
-}
+ghg_avg <- ghg %>%
+  group_by(Site) %>%
+  summarise(CO2_avg = mean(wCO2_uM_med),
+            CH4_avg = mean(wCH4_uM_med))
 
+ghg1 <- ghg %>%
+  group_by(Date, Site) %>%
+  mutate(CO2_uM = mean(wCO2_uM_med),
+         CH4_uM = mean(wCH4_uM_med)) %>%
+  filter(CO2_uM > 100)
 
-# Get season for each date
-ghg_pr$Season <- getSeason(ghg_pr$Date_corrected)
+ghg2 <- filter(ghg1, Site != "Arroyo")
 
-ggplot(ghg_pr, aes(x=Season, y = dCO2.umol, fill = Season)) +
+ggplot(ghg1, aes(x= CO2_uM, y = CH4_uM, color = Site)) +
+  geom_point()
+
+ggplot(ghg_avg, aes(x= CO2_avg, y = CH4_avg, color = Site)) +
+  geom_point()
+
+ggplot(ghg2, aes(x = Season, y = CO2_uM, color = Season)) +
+  geom_boxplot(width = 2, size = 0.8) +
+  geom_point(color = "black", position = position_jitter(width = 0), size = 1.5) +
+  scale_y_log10() +
+  theme +
+  theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(size = 20)
+  ) +
+  labs(y = CO2_lab, x = "") +
+  facet_grid(. ~ Site)
+
+ggsave("CO2 by season.png", width = 18, height = 6, dpi = 300)
+
+ggplot(ghg2, aes(x=Season, y = CH4_uM, color = Season)) +
+  geom_boxplot(width = 2, size = 0.8) +
+  geom_point(color = "black") +
+  scale_y_log10() +
+  theme +
+  theme(legend.position = "none", axis.title.x = element_blank(), axis.text.x = element_text(size = 20)) +
+  labs(y=CH4_lab) +
+  facet_grid(.~ Site)
+
+ggsave("CH4 by season.png", width = 18, height = 6, dpi = 300)
+
+ggplot(ghg1, aes(x=Season, y = CO2_uM, fill = Season)) +
   geom_boxplot() +
   geom_point() +
-  scale_y_log10() +
   theme +
   theme(legend.position = "none", axis.title.x = element_blank(), axis.text.x = element_text(size = 20)) +
   labs(y=CO2_lab, x = "") +
@@ -71,7 +123,7 @@ ggplot(ghg_pr, aes(x=Season, y = dCO2.umol, fill = Season)) +
 
 ggsave("CO2 by season.png", width = 18, height = 6, dpi = 300)
 
-ggplot(ghg_pr, aes(x=Season, y = dCH4.umol, fill = Season)) +
+ggplot(ghg1, aes(x=Season, y = CH4_uM, fill = Season)) +
   geom_boxplot() +
   geom_point() +
   scale_y_log10() +
