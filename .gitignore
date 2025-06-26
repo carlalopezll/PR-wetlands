@@ -1,6 +1,6 @@
 *.csv
 *.xlsx
-/*.jpg
+*.jpg
 *.png
 *.hobo
 
@@ -54,6 +54,3 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
-
-# Sensor data folders
-Data/DO data
