@@ -3,6 +3,7 @@
 *.jpg
 *.png
 *.hobo
+*.txt
 
 # History files
 .Rhistory
