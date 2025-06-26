@@ -1,18 +1,23 @@
+# Plotting sensor data from PR wetlands
+# Carla López Lloreda
+
+# load librarites
 library(ggplot2)
 library(lubridate)
 library(plotly)
 
-setwd("C:/Users/Carla López Lloreda/Dropbox/Grad school/Research/Humedales Puerto Rico/Data/DO data")
+# # Water level data
+# 
+# wl_pa <- read_csv("sensors/water level/Palmas_Summer2024.csv")
+# 
+# wl_pa$Timestamp_corrected <- as_datetime(wl_pa$timestamp)
+# wl_to <- read_csv("sensors/water level/Tortuguero_Summer2024.csv")
 
-# Water level data
+# read in conductivity data
 
-wl_pa <- read_csv("sensors/water level/Palmas_Summer2024.csv")
 
-wl_pa$Timestamp_corrected <- as_datetime(wl_pa$timestamp)
-wl_to <- read_csv("sensors/water level/Tortuguero_Summer2024.csv")
 
-# DO data for PR
-
+# read in DO data
 do_pr <- read.csv("sensors/DO data/Data with datetime.csv")
 do_summer <- read_csv("sensors/DO data/Summer DO.csv")
 do_winter <- read_csv("sensors/DO data/Winter 2024 deployments/7450-695497 - Copy/Winter 2024 DO.csv")
