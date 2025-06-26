@@ -7,7 +7,7 @@
 *.pdf
 *.jar
 
-Incubations/Tests/
+incubations/tests/
 
 # History files
 .Rhistory
