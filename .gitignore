@@ -1,6 +1,6 @@
 *.csv
 *.xlsx
-*.jpg
+/*.jpg
 *.png
 *.hobo
 
