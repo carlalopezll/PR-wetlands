@@ -4,6 +4,10 @@
 *.png
 *.hobo
 *.txt
+*.pdf
+*.jar
+
+Incubations/Tests/
 
 # History files
 .Rhistory
