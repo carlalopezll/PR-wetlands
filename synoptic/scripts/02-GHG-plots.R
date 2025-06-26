@@ -11,7 +11,9 @@ library(multcompView)
 library(multcomp)
 
 # Read in GHG data
-ghg_pr <- read.csv("Data/PR wetlands_GHG_NEON.csv")
+ghg <- read.csv("synoptic/data/PR wetlands_GHG_NEON.csv")
+
+ghg <- filter(ghg_pr, wCO2_uM_med > 0)
 
 # Read in LDI data
 ldi <- read.csv("LDI.csv")
@@ -23,18 +25,6 @@ soilpw <- read.csv("Data/Soil porewater.csv")
 soilpw <- filter(soilpw, Depth == 1)
 
 
-# Getting averages
-
-ghg_avg <- ghg_pr %>%
-  group_by(Site) %>%
-  summarise(Site = first(Site), 
-            CO2_avg = mean(dCO2.umol, na.rm = TRUE), 
-            CH4_avg = mean(dCH4.umol, na.rm = TRUE), 
-            CO2_min = min(dCO2.umol, na.rm = TRUE),
-            CO2_max = max(dCO2.umol, na.rm = TRUE),
-            CH4_min = min(dCH4.umol, na.rm = TRUE),
-            CH4_max = max(dCH4.umol, na.rm = TRUE))
-
 # Adding to original spreadsheet
 
 ghg <- left_join(ghg_pr, ghg_avg, by = "Site")
@@ -45,16 +35,9 @@ merge <- left_join(ghg, ldi, by = c("Site" = "Wetland"))
 # Merge soil PW data
 merge2 <- left_join(merge, soilpw, by = c("Site" = "Wetland"))
 
-# Remove the test and blank data
-
-ghg_pr2 <- merge2[-c(54:65), ]
-
 # Correct date
 
-ghg_pr2$Date_corrected <- as.Date(parse_date_time(ghg_pr2$Date, c("mdy", "ymd")))
-
-# Add the Site column (two letters), if the spreadsheet doesn't have the Site column
-ghg_pr2$Site_ID <- substr(ghg_pr2 [ , 4], start= 1, stop= 4) # Make sure that you have the right column for Site_ID
+ghg$Date_corrected <- as.Date(parse_date_time(ghg$Date, c("mdy", "ymd")))
 
 # Axis titles for subscripts in CH4 and CO2
 CO2_lab <- expression(paste("C","O"[2]^{}*" ("*mu,"M)"))
@@ -304,7 +287,7 @@ ggsave("CH4 vs TOC avg.jpg")
 
 # GHG concentrations over time
 
-ggplot(ghg_pr, aes(x=Date, y = dCO2.umol, color = Site)) +
+ggplot(ghg, aes(x=Date_corrected, y = CO2_uM, color = Site)) +
   geom_point(size = 3) +
   theme +
   labs(x = "", y = CO2_lab) +
@@ -312,7 +295,7 @@ ggplot(ghg_pr, aes(x=Date, y = dCO2.umol, color = Site)) +
 
 ggsave("CO2 over time.jpg")
 
-ggplot(ghg_pr2, aes(x=Date, y = dCH4.umol, color = Site)) +
+ggplot(ghg, aes(x=Date_corrected, y = CH4_uM, color = Site)) +
   geom_point(size = 3) +
   theme +
   labs(x = "", y = CH4_lab) +
