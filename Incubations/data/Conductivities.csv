@@ -1,0 +1,13 @@
+period,sample,spc_us_cm,cond,temp_C
+summer,TO-T1,978,,
+summer,TO-T2,2124,,
+summer,TO-T3,3217,,
+summer,PA-T1,460,,
+summer,PA-T2,1644,,
+summer,PA-T3,2791,,
+winter,TO-T1,443.6,,
+winter,TO-T2,1260,,
+winter,TO-T3,2318,,
+winter,PA-T1,377,,
+winter,PA-T2,1327,,
+winter,PA-T3,2233,,
