@@ -1,0 +1,97 @@
+No. ,Hole  Pos.,Name  ,Method  ,Coefficients  ,NPOC vol. [ml],TIC vol. [ml],TC vol. [ml],TIC  Area,TC  Area,NPOC  Area,TNb  Area,TIC [mg/l],TC [mg/l],TOC (Diff.) [mg/l],NPOC [mg/l],TNb [mg/l],Dilut.  Factor,TC  Blank,TIC  Blank,NPOC  Blank,TNb  Blank,Memo  ,Info  ,Date,Time
+71,20,DUP,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,1198,28500,,,,1.25,2.83,1,,,0,0,,,2/29/2024,23:12:48
+72,20,DUP,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,1030,29521,,,,1.083,2.928,1,,,0,0,,,2/29/2024,23:16:39
+73,20,DUP,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,981,30205,,,,1.035,2.993,1,,,0,0,,,2/29/2024,23:20:52
+65,18,Manantial,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,582,27202,,,,0.615,2.705,1,,,0,0,,,2/29/2024,22:21:41
+66,18,Manantial,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,556,27966,,,,0.586,2.778,1,,,0,0,,,2/29/2024,22:25:33
+67,18,Manantial,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,587,28847,,,,0.62,2.863,1,,,0,0,,,2/29/2024,22:29:48
+86,22,Manantial 2,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,6247,26008,,,,6.304,2.589,1,,,0,0,,,3/1/2024,1:15:29
+87,22,Manantial 2,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,5316,27297,,,,5.364,2.714,1,,,0,0,,,3/1/2024,1:19:12
+88,22,Manantial 2,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,5107,27855,,,,5.153,2.768,1,,,0,0,,,3/1/2024,1:23:32
+89,23,Manantial 3,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,1145,30329,,,,1.197,3.005,1,,,0,0,,,3/1/2024,1:40:58
+90,23,Manantial 3,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,1060,30834,,,,1.113,3.054,1,,,0,0,,,3/1/2024,1:44:52
+91,23,Manantial 3,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,1079,31451,,,,1.131,3.113,1,,,0,0,,,3/1/2024,1:49:18
+11,4,Mixed Check 3/0.3,NPOC/TNb - precise,Offset NPOC 30jan20,0.2,,,,,924,998,,,,2.44,0.243,1,,,0,0,,,2/29/2024,14:55:45
+12,4,Mixed Check 3/0.3,NPOC/TNb - precise,Offset NPOC 30jan20,0.2,,,,,828,833,,,,2.185,0.203,1,,,0,0,,,2/29/2024,14:58:30
+13,4,Mixed Check 3/0.3,NPOC/TNb - precise,Offset NPOC 30jan20,0.2,,,,,938,616,,,,2.474,0.15,1,,,0,0,,,2/29/2024,15:02:13
+14,5,Mixed Check 3/0.3,NPOC/TNb - precise,Offset NPOC 30jan20,0.6,,,,,3116,3350,,,,2.63,0.282,1,,,0,0,,,2/29/2024,15:19:33
+15,5,Mixed Check 3/0.3,NPOC/TNb - precise,Offset NPOC 30jan20,0.6,,,,,3185,3377,,,,2.688,0.284,1,,,0,0,,,2/29/2024,15:23:07
+16,5,Mixed Check 3/0.3,NPOC/TNb - precise,Offset NPOC 30jan20,0.6,,,,,3294,3452,,,,2.778,0.29,1,,,0,0,,,2/29/2024,15:27:25
+17,6,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,0.333,,,,,4635,4533,,,,7.024,0.688,1,,,0,0,,,2/29/2024,15:44:47
+18,6,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,0.333,,,,,4561,4481,,,,6.913,0.68,1,,,0,0,,,2/29/2024,15:48:11
+19,6,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,0.333,,,,,4736,4596,,,,7.177,0.698,1,,,0,0,,,2/29/2024,15:52:14
+20,7,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,0.467,,,,,7357,7739,,,,7.954,0.839,1,,,0,0,,,2/29/2024,16:09:40
+21,7,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,0.467,,,,,7228,7750,,,,7.814,0.84,1,,,0,0,,,2/29/2024,16:13:12
+22,7,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,0.467,,,,,7434,7829,,,,8.038,0.848,1,,,0,0,,,2/29/2024,16:17:19
+23,8,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,0.6,,,,,9292,9883,,,,7.837,0.833,1,,,0,0,,,2/29/2024,16:35:32
+24,8,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,0.6,,,,,9457,10225,,,,7.978,0.861,1,,,0,0,,,2/29/2024,16:39:14
+25,8,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,0.6,,,,,9417,10355,,,,7.943,0.872,1,,,0,0,,,2/29/2024,16:43:44
+26,6,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,1,,,,,15539,16177,,,,7.943,0.813,1,,,0,0,,,2/29/2024,17:03:07
+27,6,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,1,,,,,15651,16597,,,,8.002,0.834,1,,,0,0,,,2/29/2024,17:08:14
+28,6,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,1,,,,,15809,16781,,,,8.085,0.843,1,,,0,0,,,2/29/2024,17:14:08
+80,8,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,0.333,,,,,4504,5766,,,,6.826,0.876,1,,,0,0,,,3/1/2024,0:24:48
+81,8,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,0.333,,,,,4238,5823,,,,6.425,0.885,1,,,0,0,,,3/1/2024,0:28:03
+82,8,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,0.333,,,,,4439,5902,,,,6.729,0.897,1,,,0,0,,,3/1/2024,0:32:05
+110,8,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,0.333,,,,,4730,5739,,,,7.168,0.872,1,,,0,0,,,3/1/2024,4:50:55
+111,8,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,0.333,,,,,4508,5740,,,,6.833,0.872,1,,,0,0,,,3/1/2024,4:54:17
+112,8,Mixed Check 9/0.9,NPOC/TNb - precise,Offset NPOC 30jan20,0.333,,,,,4622,5770,,,,7.005,0.877,1,,,0,0,,,3/1/2024,4:58:17
+92,24,Palmas,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,17494,15105,,,,17.948,1.521,1,,,0,0,,,3/1/2024,2:09:54
+93,24,Palmas,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,17189,15848,,,,17.626,1.594,1,,,0,0,,,3/1/2024,2:15:52
+94,24,Palmas,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,16961,15884,,,,17.385,1.598,1,,,0,0,,,3/1/2024,2:21:16
+122,24,Palmas,NPOC/TNb - precise,Offset NPOC 30jan20,0.2,,,,,8024,4810,,,,20.269,1.216,1,,,0,0,,,3/1/2024,10:43:55
+123,24,Palmas,NPOC/TNb - precise,Offset NPOC 30jan20,0.2,,,,,8254,4882,,,,20.857,1.234,1,,,0,0,,,3/1/2024,10:47:27
+124,24,Palmas,NPOC/TNb - precise,Offset NPOC 30jan20,0.2,,,,,8248,4837,,,,20.841,1.223,1,,,0,0,,,3/1/2024,10:51:37
+98,26,Palmas 2,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,21943,13205,,,,22.702,1.332,1,,,0,0,,,3/1/2024,3:06:55
+99,26,Palmas 2,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,22168,13537,,,,22.944,1.365,1,,,0,0,,,3/1/2024,3:11:33
+100,26,Palmas 2,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,22239,13518,,,,23.021,1.363,1,,,0,0,,,3/1/2024,3:16:43
+119,26,Palmas 2,NPOC/TNb - precise,Offset NPOC 30jan20,0.2,,,,,8430,4805,,,,21.306,1.215,1,,,0,0,,,3/1/2024,10:18:30
+120,26,Palmas 2,NPOC/TNb - precise,Offset NPOC 30jan20,0.2,,,,,9120,5101,,,,23.068,1.29,1,,,0,0,,,3/1/2024,10:22:09
+121,26,Palmas 2,NPOC/TNb - precise,Offset NPOC 30jan20,0.2,,,,,9494,5308,,,,24.028,1.343,1,,,0,0,,,3/1/2024,10:26:27
+32,1,Reference,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,866,7791,,,,0.914,0.788,1,,,0,0,,,2/29/2024,17:55:46
+33,1,Reference,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,984,8137,,,,1.037,0.823,1,,,0,0,,,2/29/2024,17:58:50
+34,1,Reference,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,982,8293,,,,1.036,0.839,1,,,0,0,,,2/29/2024,18:02:30
+77,1,Reference,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,810,8391,,,,0.855,0.849,1,,,0,0,,,3/1/2024,0:00:38
+78,1,Reference,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,835,8727,,,,0.881,0.883,1,,,0,0,,,3/1/2024,0:03:38
+79,1,Reference,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,837,8946,,,,0.884,0.905,1,,,0,0,,,3/1/2024,0:07:28
+107,1,Reference,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,1784,8085,,,,1.831,0.818,1,,,0,0,,,3/1/2024,4:26:22
+108,1,Reference,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,1671,8310,,,,1.718,0.841,1,,,0,0,,,3/1/2024,4:29:45
+109,1,Reference,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,1641,8683,,,,1.688,0.878,1,,,0,0,,,3/1/2024,4:33:39
+4,3,Rinse,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,425,1644,,,,0.448,0.163,1,,,0,0,,,2/29/2024,14:02:38
+5,3,Rinse,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,407,1686,,,,0.429,0.168,1,,,0,0,,,2/29/2024,14:05:37
+6,3,Rinse,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,380,1614,,,,0.401,0.16,1,,,0,0,,,2/29/2024,14:09:06
+29,3,Rinse,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,1460,1572,,,,1.509,0.156,1,,,0,0,,,2/29/2024,17:31:45
+30,3,Rinse,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,1442,1516,,,,1.491,0.15,1,,,0,0,,,2/29/2024,17:35:01
+31,3,Rinse,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,1385,1369,,,,1.434,0.135,1,,,0,0,,,2/29/2024,17:39:03
+1,1,RunIn,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,2239,9560,,,,2.283,0.967,1,,,0,0,,,2/29/2024,13:38:30
+2,1,RunIn,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,2150,9766,,,,2.194,0.987,1,,,0,0,,,2/29/2024,13:41:53
+3,1,RunIn,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,2051,9756,,,,2.095,0.986,1,,,0,0,,,2/29/2024,13:45:49
+35,2,Spiked blank,NPOC/TNb - precise,Offset NPOC 30jan20,0.3,,,,,1624,2449,,,,2.786,0.41,1,,,0,0,,,2/29/2024,18:19:27
+36,2,Spiked blank,NPOC/TNb - precise,Offset NPOC 30jan20,0.3,,,,,1643,2679,,,,2.817,0.449,1,,,0,0,,,2/29/2024,18:22:35
+37,2,Spiked blank,NPOC/TNb - precise,Offset NPOC 30jan20,0.3,,,,,1655,2588,,,,2.838,0.433,1,,,0,0,,,2/29/2024,18:26:16
+68,19,SPK,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,4185,19634,,,,4.227,1.968,1,,,0,0,,,2/29/2024,22:47:17
+69,19,SPK,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,4101,19918,,,,4.142,1.996,1,,,0,0,,,2/29/2024,22:50:56
+70,19,SPK,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,4078,20404,,,,4.12,2.043,1,,,0,0,,,2/29/2024,22:55:06
+101,31,SPK,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,32757,18351,,,,34.602,1.842,1,,,0,0,,,3/1/2024,3:35:13
+102,31,SPK,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,33338,18942,,,,35.256,1.9,1,,,0,0,,,3/1/2024,3:39:01
+103,31,SPK,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,33240,19238,,,,35.145,1.929,1,,,0,0,,,3/1/2024,3:43:28
+83,21,Tortuguero,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,26781,14893,,,,27.965,1.5,1,,,0,0,,,3/1/2024,0:50:01
+84,21,Tortuguero,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,28043,15509,,,,29.354,1.561,1,,,0,0,,,3/1/2024,0:53:44
+85,21,Tortuguero,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,28537,15801,,,,29.899,1.59,1,,,0,0,,,3/1/2024,0:58:07
+113,21,Tortuguero,NPOC/TNb - precise,Offset NPOC 30jan20,0.2,,,,,10709,5525,,,,27.149,1.398,1,,,0,0,,,3/1/2024,9:24:22
+114,21,Tortuguero,NPOC/TNb - precise,Offset NPOC 30jan20,0.2,,,,,9186,5312,,,,23.237,1.344,1,,,0,0,,,3/1/2024,9:28:05
+115,21,Tortuguero,NPOC/TNb - precise,Offset NPOC 30jan20,0.2,,,,,10062,5528,,,,25.486,1.398,1,,,0,0,,,3/1/2024,9:32:39
+95,25,Tortuguero 2,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,29476,15617,,,,30.939,1.571,1,,,0,0,,,3/1/2024,2:39:36
+96,25,Tortuguero 2,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,30048,16069,,,,31.575,1.616,1,,,0,0,,,3/1/2024,2:43:25
+97,25,Tortuguero 2,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,30073,16209,,,,31.603,1.63,1,,,0,0,,,3/1/2024,2:47:50
+116,25,Tortuguero 2,NPOC/TNb - precise,Offset NPOC 30jan20,0.2,,,,,12829,6305,,,,32.635,1.595,1,,,0,0,,,3/1/2024,9:51:29
+117,25,Tortuguero 2,NPOC/TNb - precise,Offset NPOC 30jan20,0.2,,,,,12733,6240,,,,32.386,1.579,1,,,0,0,,,3/1/2024,9:55:29
+118,25,Tortuguero 2,NPOC/TNb - precise,Offset NPOC 30jan20,0.2,,,,,12840,6305,,,,32.662,1.595,1,,,0,0,,,3/1/2024,10:00:14
+8,3,Water Blank,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,105,236,,,,0.111,0.023,1,,,0,0,,,2/29/2024,14:32:51
+9,3,Water Blank,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,138,238,,,,0.145,0.023,1,,,0,0,,,2/29/2024,14:35:37
+10,3,Water Blank,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,175,258,,,,0.185,0.025,1,,,0,0,,,2/29/2024,14:39:02
+74,3,Water Blank,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,151,3687,,,,0.159,0.372,1,,,0,0,,,2/29/2024,23:37:34
+75,3,Water Blank,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,254,4873,,,,0.268,0.493,1,,,0,0,,,2/29/2024,23:40:27
+76,3,Water Blank,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,206,5137,,,,0.218,0.52,1,,,0,0,,,2/29/2024,23:43:51
+104,3,Water Blank,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,4679,2406,,,,4.723,0.241,1,,,0,0,,,3/1/2024,4:01:15
+105,3,Water Blank,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,5916,3112,,,,5.969,0.313,1,,,0,0,,,3/1/2024,4:05:01
+106,3,Water Blank,NPOC/TNb - precise,Offset NPOC 30jan20,0.5,,,,,6426,3323,,,,6.485,0.335,1,,,0,0,,,3/1/2024,4:09:28
