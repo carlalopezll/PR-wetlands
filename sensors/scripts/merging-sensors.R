@@ -77,3 +77,6 @@ do <- do %>%
          temp_C = Temperature)
 
 write.csv(do, "sensors/data/DO/merged_do.csv", row.names = FALSE)
+
+# merge cond and do data
+
