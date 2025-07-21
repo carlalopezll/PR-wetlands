@@ -9,40 +9,35 @@ library(tidyverse)
 
 ghg <- read_csv("synoptic/data/PR synoptic_GHG.csv")
 
-ghg$Date_corrected <- as.Date(ghg$Date.x, format = '%m/%d/%Y')
-ghg$Site <- ghg$Site.x
+ghg$Date_corrected <- as.Date(ghg$Date, format = '%m/%d/%Y')
 
-ldi <- read_csv("synoptic/data/LDI.csv")
+ldi <- readxl::read_xlsx("synoptic/data/LDI.xlsx")
 
 soilpw <- read_csv("synoptic/data/Soil porewater.csv")
 # Filter soil PW for 1st depth only
 soilpw <- filter(soilpw, Depth == 1)
 
-chem <- read_csv("synoptic/data/Solubles_PR synoptic.csv")
+chem <- read_csv("synoptic/data/Solubles w MDLs_PR synoptic.csv")
 chem$Date_corrected <- as.Date(chem$Date, format = '%m/%d/%Y')
 
 doc <- read_csv("synoptic/data/NPOC synoptic data.csv")
 doc$Date_corrected <- as.Date(doc$Date, format = '%m/%d/%Y')
 
-ic <- read_csv("synoptic/data/IC synoptic data.csv")
-ic$Date_corrected <- as.Date(ic$Date, format = '%m/%d/%Y')
-
-physicochem <- read_csv("synoptic/data/Synoptic field data.csv")
-physicochem$Date_corrected <- as.Date(physicochem$Date, format = '%m/%d/%Y')
+ic <- read_csv("synoptic/data/IC w MDLs_PR synoptic.csv")
+ic$Date_corrected <- as.Date(ic$Sample_date, format = '%m/%d/%Y')
 
 # where are these files
 # hydro <- read_csv("Data/GHG summary table w hydro.csv")
 
 # average reps
 ghg_avg <- ghg %>%
-  group_by(Date_corrected, Site) %>%
+  group_by(Date, Site) %>%
   summarise(
-    CO2_uM = mean(wCO2_uM_med, na.rm =TRUE),
-    CH4_uM = mean(wCH4_uM_med, na.rm =TRUE),
-    CO2_mgL = mean(wCO2_mgL_med, na.rm =TRUE),
-    CH4_mgL = mean(wCH4_mgL_med, na.rm =TRUE),
+    CO2_uM = mean(wCO2_uM_med),
+    CH4_uM = mean(wCH4_uM_med),
+    CO2_mgL = mean(wCO2_mgL_med),
+    CH4_mgL = mean(wCH4_mgL_med),
     # Season = first(Season),
-    Sample_time = first(Sample_time),
     waterTemp.C = mean(Temp_C),
     .groups = "drop"
   )
@@ -62,7 +57,7 @@ DOC_avg <- doc %>%
 # average reps for IC data
 IC_avg <- ic %>%
   group_by(Site, Date_corrected) %>%
-  summarise(F_avg = mean(F, na.rm = TRUE),
+  summarise(F_avg = mean(`F`, na.rm = TRUE),
     Cl_avg = mean(Cl, na.rm = TRUE),
     Br_avg = mean(Br, na.rm = TRUE),
     NO3_N_avg = mean(`NO3-N`, na.rm = TRUE),
@@ -78,12 +73,20 @@ IC_avg <- ic %>%
 
 data_list <- list(ghg_avg, DOC_avg, IC_avg, chem_avg)
 
-merge <- reduce(data_list, full_join, by = c("Site", "Date_corrected"))
+data_list <- lapply(data_list, function(df) {
+  if ("Date" %in% names(df)) {
+    df <- df %>% rename(Date_corrected = Date)
+  }
+  df
+})
 
-merge <- left_join(merge, physicochem, by = c("Site", "Date_corrected"))
+merge <- reduce(data_list, full_join, by = c("Site", "Date_corrected"))
 
 # Merge LDI and GHG data
 merge <- left_join(merge, ldi, by = c("Site" = "Wetland"))
+
+ggplot(merge, aes(x=DOC_avg, y = CH4_uM)) +
+  geom_point()
 
 # Merge soil PW data
 # merge <- left_join(merge, soilpw, by = c("Site" = "Wetland"))
