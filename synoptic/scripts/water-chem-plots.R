@@ -10,50 +10,16 @@ library(emmeans)
 library(multcompView)
 library(multcomp)
 
-chem <- read_csv("synoptic/data/Solubles_PR synoptic.csv")
-
-chem$Date_corrected <- as.Date(chem$Date, format = '%m/%d/%Y')
-
-# Average reps
-
-chem <- chem %>%
-  group_by(Site, Date_corrected) %>%
-  mutate(NH4_ppb_mean = mean(`NH4-N_ppb`),
-         PO4_ppb_mean = mean(`PO4-P_ppb`))
-
-ggplot(chem, aes(x= Site, y = NH4_ppb_mean)) +
-  geom_boxplot() +
-  geom_point()
-
-ggplot(chem, aes(x= Site, y = PO4_ppb_mean)) +
-  geom_boxplot() +
-  geom_point()
-
-# Read in GHG data
+# read in data
 
 
-hydro <- read_csv("Data/GHG summary table w hydro.csv")
-
-waterchem <- read_csv("Data/Water chemistry table.csv")
-doc <- read_csv("Data/DOC_TDN.csv")
-
-# Read in LDI data
-ldi <- read.csv("LDI.csv")
-
-# Read in soil PW data
-soilpw <- read.csv("Data/Soil porewater.csv")
-
-# Filter for 1st depth only
-soilpw <- filter(soilpw, Depth == 1)
-
-# Remove test and blanks
-
-ghg_pr <- filter(ghg_pr, !is.na(Rep))
+# filter out Arroyo, no winter data
+ghg <- filter(ghg, Site != "Arroyo")
 
 # Change to standard date format
 ghg$Date_corrected <- as.Date(ghg$Date, format = '%m/%d/%Y')
 
-# Theme stuff 
+# theme
 theme <- theme_bw() +
   theme(
     text = element_text(size = 35),         # base text size
@@ -68,26 +34,23 @@ theme <- theme_bw() +
 CO2_lab <- expression(paste("C","O"[2]^{}*" ("*mu,"M)"))
 CH4_lab <- expression(paste("C","H"[4]^{}*" ("*mu,"M)"))
 
-ghg_avg <- ghg %>%
-  group_by(Site) %>%
-  summarise(CO2_avg = mean(wCO2_uM_med),
-            CH4_avg = mean(wCH4_uM_med))
+ggplot(merge, aes(x= CO2_uM, y = CH4_uM, color = Site)) +
+  geom_point(size = 5) + 
+  scale_y_log10() +
+  theme
 
-ghg1 <- ghg %>%
-  group_by(Date, Site) %>%
-  mutate(CO2_uM = mean(wCO2_uM_med),
-         CH4_uM = mean(wCH4_uM_med)) %>%
-  filter(CO2_uM > 100)
+ggplot(merge, aes(x = Site, y = CO2_uM)) +
+  geom_boxplot() +
+  scale_y_log10() +
+  theme +
+  theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(size = 20)
+  ) +
+  labs(y = CO2_lab, x = "")
 
-ghg2 <- filter(ghg1, Site != "Arroyo")
-
-ggplot(ghg1, aes(x= CO2_uM, y = CH4_uM, color = Site)) +
-  geom_point()
-
-ggplot(ghg_avg, aes(x= CO2_avg, y = CH4_avg, color = Site)) +
-  geom_point()
-
-ggplot(ghg2, aes(x = Season, y = CO2_uM, color = Season)) +
+ggplot(merge, aes(x = Season, y = CO2_uM, color = Season)) +
   geom_boxplot(width = 2, size = 0.8) +
   geom_point(color = "black", position = position_jitter(width = 0), size = 1.5) +
   scale_y_log10() +
@@ -102,30 +65,9 @@ ggplot(ghg2, aes(x = Season, y = CO2_uM, color = Season)) +
 
 ggsave("CO2 by season.png", width = 18, height = 6, dpi = 300)
 
-ggplot(ghg2, aes(x=Season, y = CH4_uM, color = Season)) +
+ggplot(merge, aes(x=Season, y = CH4_uM, color = Season)) +
   geom_boxplot(width = 2, size = 0.8) +
   geom_point(color = "black") +
-  scale_y_log10() +
-  theme +
-  theme(legend.position = "none", axis.title.x = element_blank(), axis.text.x = element_text(size = 20)) +
-  labs(y=CH4_lab) +
-  facet_grid(.~ Site)
-
-ggsave("CH4 by season.png", width = 18, height = 6, dpi = 300)
-
-ggplot(ghg1, aes(x=Season, y = CO2_uM, fill = Season)) +
-  geom_boxplot() +
-  geom_point() +
-  theme +
-  theme(legend.position = "none", axis.title.x = element_blank(), axis.text.x = element_text(size = 20)) +
-  labs(y=CO2_lab, x = "") +
-  facet_grid(.~ Site)
-
-ggsave("CO2 by season.png", width = 18, height = 6, dpi = 300)
-
-ggplot(ghg1, aes(x=Season, y = CH4_uM, fill = Season)) +
-  geom_boxplot() +
-  geom_point() +
   scale_y_log10() +
   theme +
   theme(legend.position = "none", axis.title.x = element_blank(), axis.text.x = element_text(size = 20)) +
@@ -161,19 +103,6 @@ calculate_stats <- function(x) {
   return(paste0(mean_val, " ± ", sd_val, " (", min_val, "-", max_val, ")"))
 }
 
-
-# Average the 3 reps
-ghg_avg <- ghg_pr %>%
-  group_by(Site, Date_corrected) %>%
-  summarise(Date= first(Date_corrected),
-            Site = first(Site), 
-            CO2_avg = mean(dCO2.umol, na.rm = TRUE), 
-            CH4_avg = mean(dCH4.umol, na.rm = TRUE))
-
-ggplot(ghg_avg, aes(x= Date_corrected, y = CO2_avg, color = Site)) +
-  geom_point()
-
-
 # Calculate the statistics per site and add Tukey's HSD letters
 stats_summary_per_site <- ghg_avg %>%
   group_by(Site) %>%
@@ -184,30 +113,12 @@ stats_summary_per_site <- ghg_avg %>%
 
 write_csv(stats_summary_per_site, "Data/GHG summary table.csv")
 
-GHG_means <- ghg_avg %>%
-  group_by(Site) %>%
-  summarise(
-    CO2 = mean(CO2_avg),
-    CH4 = mean(CH4_avg)
-  )
-
-write_csv(GHG_means, "Data/GHG means.csv")
-
-
 ggplot(waterchem, aes(x= Site, y= F, fill = Site)) +
   geom_boxplot() +
   geom_jitter(width=0) +
   theme +
   theme(legend.position = "none")
 
-
-# Average the 3 reps
-DOC_avg <- doc %>%
-  group_by(Sample) %>%
-  summarise(Sample = first(Sample),
-            Site = first(Site),
-            DOC_avg = mean(DOC, na.rm = TRUE), 
-            TDN_avg = mean(TDN, na.rm = TRUE))
 
 ggplot(DOC_avg, aes(x= Site, y= DOC_avg, fill = Site)) +
   geom_boxplot() +
@@ -281,32 +192,6 @@ ggplot(ghg_avg, aes(x=Date, y=CO2_avg, color = Date)) +
 
 ggplot(ghg_avg, aes(x= Site, y = CH4_avg, color = Season)) +
   geom_point()
-
-# Getting averages
-
-site_avg <- ghg_pr %>%
-  filter(!is.na(Site)) %>%
-  group_by(Site) %>%
-  summarise(Site = first(Site), 
-            CO2_avg = mean(dCO2.umol, na.rm = TRUE), 
-            CH4_avg = mean(dCH4.umol, na.rm = TRUE), 
-            CO2_min = min(dCO2.umol, na.rm = TRUE),
-            CO2_max = max(dCO2.umol, na.rm = TRUE),
-            CH4_min = min(dCH4.umol, na.rm = TRUE),
-            CH4_max = max(dCH4.umol, na.rm = TRUE))
-
-
-# Adding to original spreadsheet
-
-ghg <- left_join(ghg_pr, site_avg, by = "Site")
-
-# Merge LDI and GHG data
-merge <- left_join(ghg, ldi, by = c("Site" = "Wetland"))
-
-# Merge soil PW data
-merge2 <- left_join(merge, soilpw, by = c("Site" = "Wetland","Wetland.type" = "Wetland.type"))
-
-
 
 
 # GHG with soil PW
