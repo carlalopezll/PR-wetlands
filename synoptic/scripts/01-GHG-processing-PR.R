@@ -123,11 +123,27 @@ field <- read_csv("synoptic/data/Synoptic field data.csv") %>%
   mutate(Date = as.Date(Date, format = '%m/%d/%Y'),
     Site = as.character(Site))
 
-GHG <- left_join(GHG, field, by = c("Date", "Site"))
+# Step 1: Summarize the field data by Site and Date
+field_summary <- field %>%
+  group_by(Site, Date) %>%
+  summarise(across(
+    c(Temp_C, SpC, cond, sal_psu, DO_mgL, DO_perc, atm_pressure_mmHg, air_temp_C),
+    ~ first(.x)
+  ), .groups = "drop")
+
+# Step 2: Join summarized field data to GHG
+GHG_field <- left_join(GHG, field_summary, by = c("Site", "Date"))
+
+# GHG <- left_join(GHG, field, by = c("Date", "Site", "Sample_time"))
+# GHG <- left_join(GHG, field, by = c("Date", "Site"))
+
+# if temperature is NA, use 25C for purposes of calculating GHG
+
+GHG_field$Temp_C[is.na(GHG_field$Temp_C)] <- 25
 
 # Filter air samples 
 
-Air <- GHG %>%
+Air <- GHG_field %>%
   dplyr::filter(Rep == "Air")
 
 # Looking at 3 air reps and removing any outlier
@@ -158,7 +174,7 @@ Air_summary <- Air %>%
 write.csv(Air_summary, "synoptic/data/Synoptic air GHG summary.csv", row.names = FALSE)
 
 # Adding summary air columns to GHG
-GHG_new <- left_join(GHG, Air_summary, by = "Air_Location")
+GHG_new <- left_join(GHG_field, Air_summary, by = c("Air_Location", "Site", "Date"))
 
 ########################################
 
@@ -201,6 +217,10 @@ samp$wCH4_uM_med <- samp$wCH4_umolm3_med / 1000
 
 samp$wCO2_mgL_med <- (samp$wCO2_umolm3_med * 44.01)/1000
 samp$wCH4_mgL_med <- (samp$wCH4_umolm3_med * 16.4)/1000
+
+# Remove tests and blanks
+
+samp <- filter(samp, !Air_Location == "test")
 
 # Save updated dataframe, samp
 write.csv(samp, "synoptic/data/PR synoptic_GHG.csv", row.names = FALSE)
