@@ -116,26 +116,14 @@ FwCH4 <- function(tempC, CH4w.uatm){
 GHG <- readxl::read_excel("synoptic/data/PR GHG sampling data.xlsx") %>%
   filter(!is.na(Rep)) %>%
   mutate(Date = as.Date(Date),          # ensure it's Date class
-    Site = as.character(Site)) %>%
-  select(-Sample_time)
+    Site = as.character(Site))
 
 field <- read_csv("synoptic/data/Synoptic field data.csv") %>%
   mutate(Date = as.Date(Date, format = '%m/%d/%Y'),
     Site = as.character(Site))
 
-# Step 1: Summarize the field data by Site and Date
-field_summary <- field %>%
-  group_by(Site, Date) %>%
-  summarise(across(
-    c(Temp_C, SpC, cond, sal_psu, DO_mgL, DO_perc, atm_pressure_mmHg, air_temp_C),
-    ~ first(.x)
-  ), .groups = "drop")
-
-# Step 2: Join summarized field data to GHG
-GHG_field <- left_join(GHG, field_summary, by = c("Site", "Date"))
-
-# GHG <- left_join(GHG, field, by = c("Date", "Site", "Sample_time"))
-# GHG <- left_join(GHG, field, by = c("Date", "Site"))
+# Join field data to GHG
+GHG_field <- left_join(GHG, field, by = c("Site", "Quadrant", "Date"))
 
 # if temperature is NA, use 25C for purposes of calculating GHG
 
@@ -148,13 +136,24 @@ Air <- GHG_field %>%
 
 # Looking at 3 air reps and removing any outlier
 
-ggplot(Air, aes(x = Air_Location, y = CH4_ppm)) +
-  geom_boxplot() +
-  geom_jitter(width = 0)
+Air <- Air %>%
+  group_by(Site, Date) %>%
+  mutate(median_CH4 = median(CH4_ppm, na.rm = TRUE),
+         iqr_CH4 = IQR(CH4_ppm, na.rm = TRUE),
+         outlier_flag_CH4 = abs(CH4_ppm - median_CH4) > 1.5 * iqr_CH4,
+         median_CO2 = median(CO2_ppm, na.rm = TRUE),
+         iqr_CO2 = IQR(CO2_ppm, na.rm = TRUE),
+         outlier_flag_CO2 = abs(CO2_ppm - median_CO2) > 1.5 * iqr_CO2)
 
-ggplot(Air, aes(x = Air_Location, y = CO2_ppm)) +
+ggplot(Air, aes(x = Air_Location, y = CH4_ppm, color = outlier_flag_CH4)) +
   geom_boxplot() +
-  geom_jitter(width = 0)
+  geom_jitter(width = 0) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(Air, aes(x = Air_Location, y = CO2_ppm, color = outlier_flag_CO2)) +
+  geom_boxplot() +
+  geom_jitter(width = 0) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Summarize air data for different sites
 # add column to data file with hsCO2_ppm & hsCH4_ppm (e.g., LabAir, JL Air)
