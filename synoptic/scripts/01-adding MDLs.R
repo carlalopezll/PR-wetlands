@@ -13,7 +13,7 @@ ic_mdl <- ic %>%
     `F` = if_else(is.na(`F`), 0.06375/2, `F`),
     Cl = if_else(is.na(Cl), 0.13233/2, Cl),
     Br = if_else(is.na(Br), 0.12794/2, Br),
-    `NO3-N` = if_else(is.na(`NO3-N`), 0.04767/2, `NO3-N`),
+    `NO3-N` = if_else(is.na(`NO3-N`) | `NO3-N` < 0, 0.04767/2, `NO3-N`),
     SO4 = if_else(is.na(SO4), 0.19379/2, SO4),
     Na = if_else(is.na(Na), 0.17/2, Na),
     `NH4-N` = if_else(is.na(`NH4-N`), 0.08/2, `NH4-N`),
