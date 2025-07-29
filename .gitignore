@@ -1,9 +1,8 @@
-*.xlsx
-*.jpg
-*.png
-*.hobo
-*.txt
-*.pdf
+.jpg
+.png
+.hobo
+.txt
+.pdf
 *.jar
 
 incubations/tests/
