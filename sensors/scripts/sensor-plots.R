@@ -1,117 +1,182 @@
 # Plotting sensor data from PR wetlands
 # Carla López Lloreda
 
-# load librarites
+# load libraries
 library(ggplot2)
 library(lubridate)
 library(plotly)
+library(readr)
+library(ggbreak)
+library(dplyr)
+library(cowplot)
+library(patchwork)
+#### Conductivity ####
 
-# # Water level data
-# 
-# wl_pa <- read_csv("sensors/water level/Palmas_Summer2024.csv")
-# 
-# wl_pa$Timestamp_corrected <- as_datetime(wl_pa$timestamp)
-# wl_to <- read_csv("sensors/water level/Tortuguero_Summer2024.csv")
+# read in merged data
+cond <- read_csv("sensors/data/conductivity/merged_cond.csv")
+do <- read_csv("sensors/data/DO/merged_do.csv")
 
-# read in conductivity data
+# filter out do data when out of water
+do <- filter(do, do_mgL < 6)
+do <- filter(do, temp_C <32)
 
+# Recode seasons and sites
 
+cond <- cond %>%
+  mutate(season = dplyr::recode(season, "winter" = "Winter", "summer" = "Summer"),
+         site = dplyr::recode(site, "PA" = "Palmas", "TO" = "Tortuguero"))
 
-# read in DO data
-do_pr <- read.csv("sensors/DO data/Data with datetime.csv")
-do_summer <- read_csv("sensors/DO data/Summer DO.csv")
-do_winter <- read_csv("sensors/DO data/Winter 2024 deployments/7450-695497 - Copy/Winter 2024 DO.csv")
+do <- do %>%
+  mutate(
+    season = dplyr::recode(season, "winter" = "Winter", "summer" = "Summer"),
+    site = dplyr::recode(site, "PA" = "Palmas", "TO" = "Tortuguero")
+  )
 
-do_winter <- filter(do_winter, Timestamp > "2023-12-27 15:00")
+# fix datetime
+cond$datetime <- as.POSIXct(cond$datetime, format = "%m/%d/%Y %H:%M")
+do$datetime <- as.POSIXct(do$datetime, format = "%m/%d/%Y %H:%M")
 
-do_palmas <- read_csv("Summer 2024/Palmas/Palmas_summer2024.csv")
+# Define the periods of interest
+periods <- tribble(
+  ~start, ~end, ~label,
+  ymd("2024-07-01"), ymd("2024-08-17"), "Summer 2024",
+  ymd("2025-01-11"), ymd("2025-01-19"), "Winter 2025"
+)
 
-do_tortuguero <- read_csv("Summer 2024/Tortuguero/Tortuguero_summer2024.csv")
+# Add period labels to your data
+do_filtered <- do %>%
+  mutate(period = case_when(
+    datetime >= periods$start[1] & datetime <= periods$end[1] ~ periods$label[1],
+    datetime >= periods$start[2] & datetime <= periods$end[2] ~ periods$label[2],
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(period))
 
-# Palmas
+cond_filtered <- cond %>%
+  mutate(period = case_when(
+    datetime >= periods$start[1] & datetime <= periods$end[1] ~ periods$label[1],
+    datetime >= periods$start[2] & datetime <= periods$end[2] ~ periods$label[2],
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(period))
 
+# Plot sensor data distributions
 
-ggplot(wl_pa, aes(x= num, y = cond_us_cm)) +
-  geom_point() +
-  xlab("") +
-  ylim(200, 1400)
+p1 <- ggplot(cond, aes(x = temp_C, fill = season)) +
+  geom_density(alpha = 0.5) +
+  scale_x_log10()+
+  labs(x= "Temperature (C)", y= "Probability density") +
+  facet_wrap(~site, ncol = 1) +
+  theme
 
-ggsave("Palmas cond timeseries.jpg")
+p2 <- ggplot(cond, aes(x = cond_uS_cm, fill = season)) +
+  geom_density(alpha = 0.5) +
+  scale_x_log10()+
+  labs(x = "Specific conductance (uS/cm)", y= "Probability density") +
+  facet_wrap(~site, ncol = 1) +
+  theme
 
-ggplot(wl_to, aes(x= num, y = cond_us_cm)) +
-  geom_point() +
-  xlab("") +
-  ylim(200,1400)
+p3 <- ggplot(do, aes(x= do_mgL, fill = season)) +
+  geom_density(alpha = 0.5) +
+  labs(x ="DO concentrations (mg/L)", y= "Probability density") +
+  scale_x_log10() +
+  ylim(0,2) +
+  facet_wrap(~site, ncol = 1) +
+  theme
 
-ggsave("Tortuguero condtimeseries.jpg")
+(p1 | p2 | p3) + plot_layout(guides = "collect") & theme(legend.position = "bottom")
 
+ggsave("Sensor density plots.jpg", width = 18, height = 8, dpi = 300)
 
+# Inset  
+  
+inset <- ggplot(filter(do, site == "PA"), aes(x= do_mgL, fill = season)) +
+  geom_density(alpha = 0.5) +
+  scale_x_log10() +
+  labs(x ="", y = "DO saturation (%)") +
+  facet_wrap(~site, ncol = 1) +
+  ylim(NA, 2) +
+  theme(legend.position = "none")
 
-ggplot(wl_pa, aes(x= num, y = temp_C)) +
-  geom_point() +
-  xlab("")
+inset <- ggplot(filter(do, site == "TO"), aes(x= do_mgL, fill = season)) +
+  geom_density(alpha = 0.5) +
+  scale_x_log10() +
+  labs(x ="", y = "DO saturation (%)") +
+  facet_wrap(~site, ncol = 1) +
+  ylim(NA, 2) +
+  theme(legend.position = "none")
 
-ggsave("Palmas temp timeseries.jpg")
+inset
 
-ggplot(wl_to, aes(x= num, y = temp_C)) +
-  geom_point() +
-  xlab("")
-
-ggsave("Tortuguero temp timeseries.jpg")
-
-
-
-
-ggplotly(ggplot(do_palmas, aes(x = Timestamp, y = DO_mgL)) +
-           geom_point() +
-           theme(legend.position = "none") +
-           ylim(0,3))
-
-ggsave("Palmas.jpg")
-
-ggplotly(ggplot(do_palmas, aes(x = Timestamp, y = Temp_C)) +
-           geom_point() +
-           theme(legend.position = "none"))
-
-ggsave("Palmas.jpg")
-
-
-
-ggplotly(ggplot(do_tortuguero, aes(x = Timestamp, y = DO_mgL)) +
-           geom_point() +
-           theme(legend.position = "none") +
-           ylim(0,6))
-
-ggsave("Tortuguero.jpg")
-
-
-
-
-
-
-
-
-
-
-ggplotly(ggplot(do_summer, aes(x = Timestamp, y = Temp_C, color = dayz)) +
-           geom_point() +
-           xlim(as.POSIXct("2021-06-11 18:21:00"), as.POSIXct("2021-06-12 18:55:00")) +
-           theme +
-           theme(legend.position = "none"))
-
-# Fix time
-
-do_summer$Timestamp <- as.POSIXct(do_summer$`Time (sec)`, origin="1970-01-01", tz="UTC")
-
-# Changing columns names
-colnames(do_summer)[3] <- "Temp_C"
-colnames(do_summer)[4] <- "DO_mgL"
-
-colnames(do_winter)[3] <- "Timestamp"
-colnames(do_winter)[6] <- "DO_mgL"
+# Plots
 
 theme <- theme_bw() +
   theme(text = element_text(size = 20))
+
+library(RColorBrewer)
+cols <- brewer.pal(9, "YlOrBr")
+
+plotly::ggplotly(ggplot(do_filtered, aes(x = datetime, y = do_perc, color = site)) +
+                   geom_point() +
+                   facet_grid(~period, scales = "free"))
+
+# High-frequency data multiplot
+
+a <- ggplot(do_filtered, aes(x = datetime, y = temp_C, color = site)) +
+  geom_point(size = 0.7, alpha = 0.4) +
+  facet_grid(~period, scales = "free") +
+  scale_x_datetime(date_breaks = "5 days", date_labels = "%Y-%m-%d") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.background = element_rect(fill = "lightgrey"),
+    panel.spacing = unit(1, "lines")
+  ) +
+  theme +
+  labs(x = "", y = "Temperature (C)") +
+  scale_color_manual(values = cols[6:7])
+
+a
+
+# ggsave("sensors/graphs/temp.jpg")
+
+# DO plot with facet by period
+b <- ggplot(do_filtered, aes(x = datetime, y = do_mgL, color = site)) +
+  geom_point(size = 0.7, alpha = 0.4) +
+  facet_grid(~period, scales = "free") +
+  scale_x_datetime(date_breaks = "5 days", date_labels = "%Y-%m-%d") +
+  labs(x = "", y = "DO (mg/L)") +
+  theme +
+  scale_color_manual(values = cols[6:7])
+
+b
+
+# ggsave("DO timeseries.jpg")
+
+# COND plot with facet by period AND site
+c <- ggplot(cond_filtered, aes(x = datetime, y = cond_uS_cm, color = site)) +
+  geom_point(size = 0.7, alpha = 0.4) +
+  facet_grid(~period, scales = "free") +
+  scale_x_datetime(date_breaks = "5 days", date_labels = "%Y-%m-%d") +
+  labs(x = "", y = "Specific conductance (uS/cm)") +
+  theme +
+  scale_color_manual(values = cols[6:7])
+
+c
+
+# For diagonal dates in the x-axis
+# theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     strip.background = element_rect(fill = "lightgrey"),
+#     panel.spacing = unit(1, "lines")
+#   )
+
+(a | b | c) + 
+  plot_layout(nrow = 3, guides = "collect") &
+  theme(legend.position = "bottom")
+
+ggsave("timeseries.jpg", width = 16, height = 10)
+
 
 # Adding day and night bands
 
@@ -122,22 +187,6 @@ is_day <- function(hour) {
 
 # Add a new column indicating if it's day or night
 do_summer$dayz <- is_day(as.numeric(format(do_summer$Timestamp_corrected, "%H")))
-
-day_lims <- 
-
-# Palmas
-ggplotly(ggplot(do_summer, aes(x = Timestamp, y = DO_mgL, color = dayz)) +
-  geom_point() +
-  xlim(as.POSIXct("2021-06-11 18:21:00"), as.POSIXct("2021-06-12 18:55:00")) +
-  ylim(0,0.5) +
-  theme +
-  theme(legend.position = "none"))
-
-ggplotly(ggplot(do_summer, aes(x = Timestamp, y = Temp_C, color = dayz)) +
-           geom_point() +
-           xlim(as.POSIXct("2021-06-11 18:21:00"), as.POSIXct("2021-06-12 18:55:00")) +
-           theme +
-           theme(legend.position = "none"))
 
 
 
@@ -207,10 +256,3 @@ ggsave("Temp timeseries.jpg")
 
 ggplot(do_summer, aes(x=Temp_C, y= DO_mgL, color = Timestamp)) +
   geom_point()
-
-library(plotly)
-ggplotly(ggplot(do_winter, aes(x = Timestamp, y = DO_mgL)) +
-  geom_point())
-
-ggplotly(ggplot(do_winter, aes(x = Timestamp, y = Temperature)) +
-           geom_point())
