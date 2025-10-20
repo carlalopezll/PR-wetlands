@@ -1,11 +1,11 @@
-.jpg
-.png
-.hobo
-.txt
-.pdf
+*.jpg
+*.png
+*.hobo
+*.txt
+*.pdf
 *.jar
-.docx
-.xlsx
+*.docx
+*.xlsx
 
 global/
 map/
