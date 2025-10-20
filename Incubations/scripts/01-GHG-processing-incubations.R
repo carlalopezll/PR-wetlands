@@ -2,7 +2,9 @@
 # Equations to used to estimate CO2 and CH4 from headspace sampling 
 # Coded/checked/updated by ERH from UQAM/Krycklan files
 # Code updated for Delmarva Project by ERH
+
 # Code updated for PR incubations by CLL
+# These samples were injected into a capped vial without venting and accounts for mixing ratios and changes in pressure
 ########################################
 
 # Load libraries
@@ -103,13 +105,15 @@ FwCH4 <- function(tempC, CH4w.uatm){
   CH4wM
 }
 
-
-
 ########################################
 
 ############# B. LOAD/MERGE DATA FILES #############
 
 # LOAD files from (1) GC output, (2) lab notes with headspace volumes, and (3) any different site IDs
+
+# Read GCHeadspace with GC data
+
+GHG <- readxl::read_excel("incubations/data/GHG_PR incubations.xlsx")
 
 ########################################
 
@@ -117,23 +121,14 @@ FwCH4 <- function(tempC, CH4w.uatm){
 
 # Estimate stream CO2/CH4 from GC headspace (uatm) 
 # NOTE: lab temp and pressure are fixed for now, 20C and 102kPa
+## Could use pressure at Sabana field station where the samples were processed (99.98kPa)
 
-# 1. Convert GC headspace using air samples
-# 2. Do the mixing ratio using capped air samples
-
-
-# Read GCHeadspace with GC data
-
-GHG <- readxl::read_excel("incubations/data/GHG_PR incubations.xlsx")
-
-# Filter air samples 
-
-Air <- GHG %>%
-  dplyr::filter(rep == "air")
+# 1. Do the mixing ratio using capped air samples
+# 2. Convert GC headspace using air samples
 
 # Looking at 3 air reps and flagging any outlier
-
-Air <- Air %>%
+Air <- GHG %>%
+  filter(rep == "air") %>%
   group_by(period, vial_name) %>%
   mutate(median_CH4 = median(CH4_ppm, na.rm = TRUE),
          iqr_CH4 = IQR(CH4_ppm, na.rm = TRUE),
@@ -142,70 +137,102 @@ Air <- Air %>%
          iqr_CO2 = IQR(CO2_ppm, na.rm = TRUE),
          outlier_flag_CO2 = abs(CO2_ppm - median_CO2) > 1.5 * iqr_CO2)
 
-ggplot(Air, aes(x = vial_name, y = CH4_ppm, color = outlier_flag_CH4)) +
-  geom_boxplot() +
-  geom_jitter(width = 0) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  facet_wrap(~period)
-
 ggplot(Air, aes(x = vial_name, y = CO2_ppm, color = outlier_flag_CO2)) +
   geom_boxplot() +
   geom_jitter(width = 0) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   facet_wrap(~period)
 
-# Replace negative CH4 values with NA and remove flagged values
+ggplot(Air, aes(x = vial_name, y = CH4_ppm, color = outlier_flag_CH4)) +
+  geom_boxplot() +
+  geom_jitter(width = 0) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  facet_wrap(~period)
+
+# Remove negative CH4 values and flagged values
 
 Air <- Air %>%
-  mutate(
-    CH4_ppm = if_else(CH4_ppm <0, NA, CH4_ppm),
-    CH4_ppm = if_else(outlier_flag_CH4, NA, CH4_ppm),
-    CO2_ppm = if_else(outlier_flag_CO2, NA, CO2_ppm)
-  )
+  mutate(CH4_ppm = if_else(CH4_ppm <0, NA, CH4_ppm),
+         CH4_ppm = if_else(outlier_flag_CH4, NA, CH4_ppm),
+         CO2_ppm = if_else(outlier_flag_CO2, NA, CO2_ppm))
 
-# Summarize air data for different sites
-# add column to data file with hsCO2_ppm & hsCH4_ppm (e.g., LabAir, JL Air)
-# Air_Location is the ID that will match up with air-water
-
-# Filter air samples, group by location and calculate median, max and min
-
+# Filter air samples (called processing air), group by location and calculate median, max and min
 Air_summary <- Air %>%
-  dplyr::group_by(period, processing_air) %>%
-  dplyr::summarize(period = first(period),
-                   AirCO2_min_ppm = min(CO2_ppm, na.rm = TRUE), AirCO2_med_ppm = median(CO2_ppm, na.rm = TRUE), 
-                   AirCO2_max_ppm = max(CO2_ppm, na.rm = TRUE), AirCH4_min_ppm = min(CH4_ppm, na.rm = TRUE),
-                   AirCH4_med_ppm = median(CH4_ppm, na.rm = TRUE), AirCH4_max_ppm = max(CH4_ppm, na.rm = TRUE))
+  group_by(period, processing_air) %>%
+  summarize(period = first(period),
+            AirCO2_min_ppm = min(CO2_ppm, na.rm = TRUE), 
+            AirCO2_med_ppm = median(CO2_ppm, na.rm = TRUE), 
+            AirCO2_max_ppm = max(CO2_ppm, na.rm = TRUE), 
+            AirCH4_min_ppm = min(CH4_ppm, na.rm = TRUE),
+            AirCH4_med_ppm = median(CH4_ppm, na.rm = TRUE), 
+            AirCH4_max_ppm = max(CH4_ppm, na.rm = TRUE))
 
 # Save GHG air concentrations to a csv
-write.csv(Air_summary, "incubations/data/Air GHG_summary.csv", row.names = FALSE)
+# write.csv(Air_summary, "incubations/data/Air GHG_summary.csv", row.names = FALSE)
 
 # Adding summary air columns to GHG
 GHG_new <- left_join(GHG, Air_summary, by = c("period", "processing_air"))
 
 ########################################
 
+#### Mixing ratio stuff
+
+# Filter vial air samples (called capped air), group by location and calculate median
+
+capped_air_summary <- GHG %>%
+  filter(rep == "capped air") %>%
+  group_by(period, vial_air) %>%
+  summarize(period = first(period),
+            capped_air_CO2_ppm = median(CO2_ppm, na.rm = TRUE), 
+            capped_air_CH4_ppm = median(CH4_ppm, na.rm = TRUE))
+
+# Adding summary air columns to GHG
+GHG_new2 <- left_join(GHG_new, capped_air_summary, by = c("period", "vial_air"))
+
+
+# C_final = (C_vial*V_vial + C_sample*V_sample)/(V_vial+V_sample)
+
+# C_vial = capped air
+# V_vial = 20ml (what the vial holds)
+# C_sample = what was measured from the GC
+# V_sample = the sample volume
+
+V_vial <- 20
+
+GHG_new3 <- GHG_new2 %>%
+  mutate(CO2_ppm_corrected = (capped_air_CO2_ppm*V_vial + CO2_ppm*AirV_mL)/ (V_vial),
+         CH4_ppm_corrected = (capped_air_CH4_ppm*V_vial + CH4_ppm*AirV_mL)/ (V_vial))
+
+
+ggplot(GHG_new3, aes(x=CO2_ppm, y = CO2_ppm_corrected)) +
+  geom_point() +
+  geom_abline(slope = 1)
+
+ggplot(GHG_new3, aes(x=CH4_ppm, y = CH4_ppm_corrected)) +
+  geom_point() +
+  geom_abline(slope = 1)
+
+
 ############# C. CONVERT GC DATA TO STREAM CO2/CH4 #############
 
 # Estimate stream CO2/CH4 from GC headspace (uatm) 
 # NOTE: lab temp and pressure are fixed for now, 20C and 102kPa
 
-samp <- GHG_new
-
 # subset the data to exclude air samples
-samp <- GHG_new %>%
+samp <- GHG_new3 %>%
   filter(!(rep %in% c("air", "capped air")))
 
 # StmCO2fromSamp <- function(tempLab.C, tempSite.C, kPa, gasV, waterV, pCO2.samp, pCO2.hs)
 # This is pCO2 (uatm)
-samp$wCO2_uatm_medhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_med_ppm)
-samp$wCO2_uatm_minhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_min_ppm)
-samp$wCO2_uatm_maxhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_max_ppm)
+samp$wCO2_uatm_medhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm_corrected, pCO2.hs=samp$AirCO2_med_ppm)
+samp$wCO2_uatm_minhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm_corrected, pCO2.hs=samp$AirCO2_min_ppm)
+samp$wCO2_uatm_maxhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm_corrected, pCO2.hs=samp$AirCO2_max_ppm)
 
 # StmCH4fromSamp <- function(tempLab.C, tempSite.C, kPa, gasV, waterV, pCH4.samp, pCH4.hs)
 # This is pCH4 (uatm)
-samp$wCH4_uatm_medhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_med_ppm)
-samp$wCH4_uatm_minhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_min_ppm)
-samp$wCH4_uatm_maxhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_max_ppm)
+samp$wCH4_uatm_medhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm_corrected, pCH4.hs=samp$AirCH4_med_ppm)
+samp$wCH4_uatm_minhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm_corrected, pCH4.hs=samp$AirCH4_min_ppm)
+samp$wCH4_uatm_maxhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm_corrected, pCH4.hs=samp$AirCH4_max_ppm)
 
 #### CONVERT pCO2 and pCH4 from uatm to umol/m3
 
@@ -222,8 +249,6 @@ samp$wCH4_uM_med <- samp$wCH4_umolm3_med / 1000
 samp$wCO2_mgL_med <- (samp$wCO2_umolm3_med * 44.01)/1000
 samp$wCO2_gL_med <- samp$wCO2_mgL_med/1000
 samp$wCH4_mgL_med <- (samp$wCH4_umolm3_med * 16.4)/1000
-
-#### Need to finish doing the mixing ratio stuff ####
 
 # Save updated dataframe, samp
 write_csv(samp, "incubations/data/Incubations_GHG_processed.csv")
