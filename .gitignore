@@ -4,8 +4,16 @@
 .txt
 .pdf
 *.jar
+.docx
+.xlsx
 
+global/
 incubations/tests/
+incubations/data
+incubations/pictures
+
+sensors/data
+synoptic/data
 
 # History files
 .Rhistory
