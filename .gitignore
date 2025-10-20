@@ -6,15 +6,21 @@
 *.jar
 *.docx
 *.xlsx
+*.csv
 
 global/
-map/
-incubations/tests/
-incubations/data
-incubations/pictures
 
-sensors/data
-synoptic/data
+map/
+
+incubations/tests/
+incubations/data/
+incubations/pictures/
+
+sensors/data/
+sensors/graphs/
+
+synoptic/data/
+synoptic/output/
 
 # History files
 .Rhistory
