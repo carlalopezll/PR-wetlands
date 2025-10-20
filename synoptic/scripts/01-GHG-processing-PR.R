@@ -125,12 +125,25 @@ field <- read_csv("synoptic/data/Synoptic field data.csv") %>%
 # Join field data to GHG
 GHG_field <- left_join(GHG, field, by = c("Site", "Quadrant", "Date"))
 
+# Remove tests and blanks
+GHG_field <- filter(GHG_field, !Air_Location == "test")
+
 # Check for sites w/o temp
 na_rows <- GHG_field[!complete.cases(GHG_field$Temp_C), ]
 
 # if temperature is NA, use 25C for purposes of calculating GHG
 
 GHG_field$Temp_C[is.na(GHG_field$Temp_C)] <- 25
+
+# Replace negative CH4 atmospheric values with NA
+### THIS IS ACTUALLY A PROBLEM BECAUSE THEN A LOT OF THE SAMPLING DATES DON'T HAVE EVEN ONE AIR REP ###
+### SHOULD I REPLACE WITH 0? THAT ALSO FEELS PROBLEMATIC
+### MAYBE JUST USE AN AVERAGE
+
+neg_CH4 <- filter(GHG_field, CH4_ppm < 0)
+
+GHG_field <- GHG_field %>%
+  mutate(CH4_ppm = if_else(CH4_ppm <0, 1.8, CH4_ppm))
 
 # Filter air samples 
 
@@ -162,14 +175,6 @@ ggplot(Air, aes(x = Air_Location, y = CO2_ppm, color = outlier_flag_CO2)) +
   geom_jitter(width = 0) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-#################### Replace negative CH4 atmospheric values with 0 or some MDL? ##############################
-
-GHG_field <- GHG_field %>%
-  mutate(
-    CH4_ppm = if_else(CH4_ppm <0, 0, CH4_ppm
-    )
-  )
-
 # Summarize air data for different sites
 # add column to data file with hsCO2_ppm & hsCH4_ppm (e.g., LabAir, JL Air)
 # Air_Location is the ID that will match up with air-water
@@ -177,8 +182,8 @@ GHG_field <- GHG_field %>%
 # Filter air samples, group by location and calculate median, max and min
 
 Air_summary <- Air %>%
-  dplyr::group_by(Air_Location) %>%
-  dplyr::summarize(AirCO2_min_ppm = min(CO2_ppm, na.rm = TRUE), AirCO2_med_ppm = median(CO2_ppm, na.rm = TRUE), 
+  group_by(Air_Location) %>%
+  summarize(AirCO2_min_ppm = min(CO2_ppm, na.rm = TRUE), AirCO2_med_ppm = median(CO2_ppm, na.rm = TRUE), 
                    AirCO2_max_ppm = max(CO2_ppm, na.rm = TRUE), AirCH4_min_ppm = min(CH4_ppm, na.rm = TRUE),
                    AirCH4_med_ppm = median(CH4_ppm, na.rm = TRUE), AirCH4_max_ppm = max(CH4_ppm, na.rm = TRUE),
                    Site = first(Site),
@@ -195,7 +200,8 @@ GHG_new <- left_join(GHG_field, Air_summary, by = c("Air_Location", "Site", "Dat
 ############# C. CONVERT GC DATA TO STREAM CO2/CH4 #############
 
 # Estimate stream CO2/CH4 from GC headspace (uatm) 
-# NOTE: lab temp and pressure are fixed for now, 20C and 102kPa
+# NOTES: Lab temp fixed at 20C
+# Pressure fixed at 101.325 kPa (pressure at 0m ASL)
 
 samp <- GHG_new
 
@@ -203,16 +209,18 @@ samp <- GHG_new
 samp <- GHG_new[ which(GHG_new$Rep!="Air"), ]
 
 # StmCO2fromSamp <- function(tempLab.C, tempSite.C, kPa, gasV, waterV, pCO2.samp, pCO2.hs)
+
 # This is pCO2 (uatm)
-samp$wCO2_uatm_medhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_med_ppm)
-samp$wCO2_uatm_minhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_min_ppm)
-samp$wCO2_uatm_maxhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_max_ppm)
+samp$wCO2_uatm_medhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=101.325, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_med_ppm)
+samp$wCO2_uatm_minhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=101.325, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_min_ppm)
+samp$wCO2_uatm_maxhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=101.325, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_max_ppm)
 
 # StmCH4fromSamp <- function(tempLab.C, tempSite.C, kPa, gasV, waterV, pCH4.samp, pCH4.hs)
+
 # This is pCH4 (uatm)
-samp$wCH4_uatm_medhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_med_ppm)
-samp$wCH4_uatm_minhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_min_ppm)
-samp$wCH4_uatm_maxhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=102, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_max_ppm)
+samp$wCH4_uatm_medhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=101.325, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_med_ppm)
+samp$wCH4_uatm_minhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=101.325, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_min_ppm)
+samp$wCH4_uatm_maxhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=101.325, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_max_ppm)
 
 #### CONVERT pCO2 and pCH4 from uatm to umol/m3
 
@@ -230,10 +238,7 @@ samp$wCO2_mgL_med <- (samp$wCO2_umolm3_med * 44.01)/1000
 samp$wCO2_gL_med <- samp$wCO2_mgL_med/1000
 samp$wCH4_mgL_med <- (samp$wCH4_umolm3_med * 16.4)/1000
 
-# Remove tests and blanks
-samp <- filter(samp, !Air_Location == "test")
-
-# Remove the temp that were assigned
+# Remove the temps that were assigned  to NA
 samp <- samp %>%
   mutate(Temp_C = if_else(Temp_C == 25, NA_real_, Temp_C))
 
