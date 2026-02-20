@@ -1,6 +1,9 @@
-# adding minimum detection limits
-# Do this for the negative CH4 values as well # need to discuss with Erin
+# Correcting for dilutions and adding minimum detection limits to IC and solubles data
 
+# Last updated: 2/20/2026
+# Author: Carla Lopez Lloreda
+
+#### IC ####
 ic <- read_csv("synoptic/data/IC synoptic data.csv")
 
 # converting anions from ug/L to mg/L
@@ -34,7 +37,7 @@ write_csv(ic_mdl, "synoptic/data/IC w MDLs_PR synoptic.csv")
 
 #### DOC and TDN ####
 
-doc <- read_csv("synoptic/data/NPOC synoptic data.csv")
+doc <- read_csv("synoptic/data/raw instrument data/NPOC/NPOC synoptic data.csv")
 doc <- doc %>%
   mutate(DOC_mgL = DOC_mgL * dilution_factor,
          TDN_mgL = TDN_mgL * dilution_factor)
@@ -48,7 +51,7 @@ write_csv(doc, "synoptic/data/NPOC synoptic data_corrected.csv")
 # there are no NAs in the chem data, should I just do this for the negative values?
 
 chem <- read_csv("synoptic/data/Solubles_PR synoptic.csv")
-chem$Date_corrected <- as.Date(chem$Date, format = '%m/%d/%Y')
+chem$date_corrected <- as.Date(chem$sample_date, format = '%m/%d/%Y')
 
 # `NO3-N` = if_else(is.na(`NO3-N`) | `NO3-N` < 0, 0.04767/2, `NO3-N` * dilution_factor),
 chem_mdl <- chem %>%
