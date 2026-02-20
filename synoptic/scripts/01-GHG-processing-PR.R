@@ -2,8 +2,8 @@
 # Equations to used to estimate CO2 and CH4 from headspace sampling 
 # Coded/checked/updated by ERH from UQAM/Krycklan files
 # Code updated for Delmarva Project by ERH
-# Last update: 20240215 by CLL
-# CH4 calculations are fixed
+# Code updated for Puerto Rico wetlands by CLL
+# Last update: 2/15/2024 by CLL
 ########################################
 
 # Load libraries
@@ -114,26 +114,26 @@ FwCH4 <- function(tempC, CH4w.uatm){
 # Read GCHeadspace with GC data
 
 GHG <- readxl::read_excel("synoptic/data/PR GHG sampling data.xlsx") %>%
-  filter(!is.na(Rep)) %>%
-  mutate(Date = as.Date(Date),          # ensure it's Date class
-    Site = as.character(Site))
+  filter(!is.na(rep)) %>%
+  mutate(Date = as.Date(date),          # ensure it's Date class
+    Site = as.character(site))
 
-field <- read_csv("synoptic/data/Synoptic field data.csv") %>%
-  mutate(Date = as.Date(Date, format = '%m/%d/%Y'),
-    Site = as.character(Site))
+field <- read_csv("synoptic/data/synoptic field data.csv") %>%
+  mutate(date = as.Date(date, format = '%m/%d/%Y'),
+    site = as.character(site))
 
 # Join field data to GHG
-GHG_field <- left_join(GHG, field, by = c("Site", "Quadrant", "Date"))
+GHG_field <- left_join(GHG, field, by = c("site", "quadrant", "date"))
 
 # Remove tests and blanks
-GHG_field <- filter(GHG_field, !Air_Location == "test")
+GHG_field <- filter(GHG_field, !air_location == "test")
 
 # Check for sites w/o temp
-na_rows <- GHG_field[!complete.cases(GHG_field$Temp_C), ]
+na_rows <- GHG_field[!complete.cases(GHG_field$temp_C), ]
 
 # if temperature is NA, use 25C for purposes of calculating GHG
 
-GHG_field$Temp_C[is.na(GHG_field$Temp_C)] <- 25
+GHG_field$temp_C[is.na(GHG_field$temp_C)] <- 25
 
 # Replace negative CH4 atmospheric values with NA
 ### THIS IS ACTUALLY A PROBLEM BECAUSE THEN A LOT OF THE SAMPLING DATES DON'T HAVE EVEN ONE AIR REP ###
@@ -148,12 +148,12 @@ GHG_field <- GHG_field %>%
 # Filter air samples 
 
 Air <- GHG_field %>%
-  dplyr::filter(Rep == "Air")
+  dplyr::filter(rep == "Air")
 
 # Looking at 3 air reps and flagging any outlier
 
 Air <- Air %>%
-  group_by(Site, Date) %>%
+  group_by(site, date) %>%
   mutate(median_CH4 = median(CH4_ppm, na.rm = TRUE),
          iqr_CH4 = IQR(CH4_ppm, na.rm = TRUE),
          outlier_flag_CH4 = abs(CH4_ppm - median_CH4) > 1.5 * iqr_CH4,
@@ -161,16 +161,16 @@ Air <- Air %>%
          iqr_CO2 = IQR(CO2_ppm, na.rm = TRUE),
          outlier_flag_CO2 = abs(CO2_ppm - median_CO2) > 1.5 * iqr_CO2)
 
-ggplot(Air, aes(x = Date_analyzed, y = CH4_ppm)) +
+ggplot(Air, aes(x = date_analyzed, y = CH4_ppm)) +
   geom_point() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggplot(Air, aes(x = Air_Location, y = CH4_ppm, color = outlier_flag_CH4)) +
+ggplot(Air, aes(x = air_location, y = CH4_ppm, color = outlier_flag_CH4)) +
   geom_boxplot() +
   geom_jitter(width = 0) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggplot(Air, aes(x = Air_Location, y = CO2_ppm, color = outlier_flag_CO2)) +
+ggplot(Air, aes(x = air_location, y = CO2_ppm, color = outlier_flag_CO2)) +
   geom_boxplot() +
   geom_jitter(width = 0) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -182,18 +182,18 @@ ggplot(Air, aes(x = Air_Location, y = CO2_ppm, color = outlier_flag_CO2)) +
 # Filter air samples, group by location and calculate median, max and min
 
 Air_summary <- Air %>%
-  group_by(Air_Location) %>%
+  group_by(air_location) %>%
   summarize(AirCO2_min_ppm = min(CO2_ppm, na.rm = TRUE), AirCO2_med_ppm = median(CO2_ppm, na.rm = TRUE), 
                    AirCO2_max_ppm = max(CO2_ppm, na.rm = TRUE), AirCH4_min_ppm = min(CH4_ppm, na.rm = TRUE),
                    AirCH4_med_ppm = median(CH4_ppm, na.rm = TRUE), AirCH4_max_ppm = max(CH4_ppm, na.rm = TRUE),
-                   Site = first(Site),
-                   Date = first(Date))
+                   site = first(site),
+                   date = first(date))
 
 # Save GHG air concentrations to a csv
-write.csv(Air_summary, "synoptic/data/Synoptic air GHG summary.csv", row.names = FALSE)
+write.csv(Air_summary, "synoptic/data/synoptic air GHG summary.csv", row.names = FALSE)
 
 # Adding summary air columns to GHG
-GHG_new <- left_join(GHG_field, Air_summary, by = c("Air_Location", "Site", "Date"))
+GHG_new <- left_join(GHG_field, Air_summary, by = c("air_location", "site", "date"))
 
 ########################################
 
@@ -206,26 +206,26 @@ GHG_new <- left_join(GHG_field, Air_summary, by = c("Air_Location", "Site", "Dat
 samp <- GHG_new
 
 # subset the data to exclude air samples
-samp <- GHG_new[ which(GHG_new$Rep!="Air"), ]
+samp <- GHG_new[ which(GHG_new$rep!="Air"), ]
 
 # StmCO2fromSamp <- function(tempLab.C, tempSite.C, kPa, gasV, waterV, pCO2.samp, pCO2.hs)
 
 # This is pCO2 (uatm)
-samp$wCO2_uatm_medhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=101.325, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_med_ppm)
-samp$wCO2_uatm_minhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=101.325, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_min_ppm)
-samp$wCO2_uatm_maxhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=101.325, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_max_ppm)
+samp$wCO2_uatm_medhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$temp_C, kPa=101.325, gasV=samp$airvol_mL, waterV=samp$watervol_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_med_ppm)
+samp$wCO2_uatm_minhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$temp_C, kPa=101.325, gasV=samp$airvol_mL, waterV=samp$watervol_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_min_ppm)
+samp$wCO2_uatm_maxhs <- StmCO2fromSamp(tempLab.C=20, tempSite.C=samp$temp_C, kPa=101.325, gasV=samp$airvol_mL, waterV=samp$watervol_mL, pCO2.samp=samp$CO2_ppm, pCO2.hs=samp$AirCO2_max_ppm)
 
 # StmCH4fromSamp <- function(tempLab.C, tempSite.C, kPa, gasV, waterV, pCH4.samp, pCH4.hs)
 
 # This is pCH4 (uatm)
-samp$wCH4_uatm_medhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=101.325, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_med_ppm)
-samp$wCH4_uatm_minhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=101.325, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_min_ppm)
-samp$wCH4_uatm_maxhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$Temp_C, kPa=101.325, gasV=samp$AirV_mL, waterV=samp$WaterV_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_max_ppm)
+samp$wCH4_uatm_medhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$temp_C, kPa=101.325, gasV=samp$airvol_mL, waterV=samp$watervol_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_med_ppm)
+samp$wCH4_uatm_minhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$temp_C, kPa=101.325, gasV=samp$airvol_mL, waterV=samp$watervol_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_min_ppm)
+samp$wCH4_uatm_maxhs <- StmCH4fromSamp(tempLab.C=20, tempSite.C=samp$temp_C, kPa=101.325, gasV=samp$airvol_mL, waterV=samp$watervol_mL, pCH4.samp=samp$CH4_ppm, pCH4.hs=samp$AirCH4_max_ppm)
 
 #### CONVERT pCO2 and pCH4 from uatm to umol/m3
 
-samp$wCO2_umolm3_med <- FwCO2(tempC = samp$Temp_C, CO2w.uatm = samp$wCO2_uatm_medhs)
-samp$wCH4_umolm3_med <- FwCH4(tempC = samp$Temp_C, CH4w.uatm = samp$wCH4_uatm_medhs)
+samp$wCO2_umolm3_med <- FwCO2(tempC = samp$temp_C, CO2w.uatm = samp$wCO2_uatm_medhs)
+samp$wCH4_umolm3_med <- FwCH4(tempC = samp$temp_C, CH4w.uatm = samp$wCH4_uatm_medhs)
 
 #### CONVERT umol/m3 to umol/L
 
@@ -240,7 +240,7 @@ samp$wCH4_mgL_med <- (samp$wCH4_umolm3_med * 16.4)/1000
 
 # Remove the temps that were assigned  to NA
 samp <- samp %>%
-  mutate(Temp_C = if_else(Temp_C == 25, NA_real_, Temp_C))
+  mutate(Temp_C = if_else(temp_C == 25, NA_real_, temp_C))
 
 # Save updated dataframe, samp
 write.csv(samp, "synoptic/data/PR synoptic_GHG.csv", row.names = FALSE)
